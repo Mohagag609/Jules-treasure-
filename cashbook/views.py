@@ -5,13 +5,33 @@ from django.db.models import Sum, Q
 from .models import CashTransaction, CashBox
 from .forms import CashTransactionForm
 
+from decimal import Decimal
+
 def dashboard(request):
-    boxes = CashBox.objects.filter(is_active=True)
-    # today = CashTransaction.objects.filter(date__exact=request.GET.get("date")) # This variable is not used in the context
+    # --- Real database logic is commented out for now ---
+    # boxes = CashBox.objects.filter(is_active=True)
+    # context = {
+    #     "boxes": [(b, b.balance) for b in boxes],
+    #     "in_today": CashTransaction.objects.filter(txn_type__in=["receipt","transfer_in"], status="approved").aggregate(Sum("amount"))["amount__sum"] or 0,
+    #     "out_today": CashTransaction.objects.filter(txn_type__in=["payment","transfer_out"], status="approved").aggregate(Sum("amount"))["amount__sum"] or 0,
+    # }
+
+    # --- Fake data for UI development ---
+    class MockBox:
+        def __init__(self, name, currency):
+            self.name = name
+            self.currency = currency
+
+    fake_boxes_data = [
+        (MockBox("الخزنة الرئيسية", "EGP"), Decimal("15750.50")),
+        (MockBox("خزنة فرع الإسكندرية", "EGP"), Decimal("8300.00")),
+        (MockBox("خزنة العهدة", "USD"), Decimal("1200.00")),
+    ]
+
     context = {
-        "boxes": [(b, b.balance) for b in boxes],
-        "in_today": CashTransaction.objects.filter(txn_type__in=["receipt","transfer_in"], status="approved").aggregate(Sum("amount"))["amount__sum"] or 0,
-        "out_today": CashTransaction.objects.filter(txn_type__in=["payment","transfer_out"], status="approved").aggregate(Sum("amount"))["amount__sum"] or 0,
+        "boxes": fake_boxes_data,
+        "in_today": Decimal("2500.00"),
+        "out_today": Decimal("850.75"),
     }
     return render(request, "cashbook/dashboard.html", context)
 

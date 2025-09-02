@@ -4,41 +4,84 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">لوحة التحكم</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="bi bi-speedometer2"></i> لوحة التحكم
+        </h1>
+        <a href="{% url 'txn_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle-fill me-2"></i>إضافة سند جديد
+        </a>
+    </div>
 
+    <!-- Summary Cards -->
     <div class="row">
-        <div class="col-md-8">
-            <h2>أرصدة الخزائن</h2>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>الخزنة</th>
-                        <th>الرصيد الحالي</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for box, balance in boxes %}
-                    <tr>
-                        <td>{{ box.name }}</td>
-                        <td>{{ balance|floatformat:2 }} {{ box.currency }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2">لا يوجد خزائن معرفة.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-md-4 mb-4">
+            <div class="card text-white bg-success shadow">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">إجمالي إيرادات اليوم</h5>
+                        <p class="card-text fs-4 fw-bold">{{ in_today|floatformat:2 }}</p>
+                    </div>
+                    <i class="bi bi-arrow-up-circle-fill h1 opacity-50"></i>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    ملخص اليوم
+        <div class="col-md-4 mb-4">
+            <div class="card text-white bg-danger shadow">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">إجمالي مصروفات اليوم</h5>
+                        <p class="card-text fs-4 fw-bold">{{ out_today|floatformat:2 }}</p>
+                    </div>
+                    <i class="bi bi-arrow-down-circle-fill h1 opacity-50"></i>
                 </div>
-                <div class="card-body">
-                    <p><strong>إجمالي الإيرادات المعتمدة:</strong> <span class="text-success">{{ in_today|floatformat:2 }}</span></p>
-                    <p><strong>إجمالي المصروفات المعتمدة:</strong> <span class="text-danger">{{ out_today|floatformat:2 }}</span></p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-white bg-info shadow">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">صافي حركة اليوم</h5>
+                        <p class="card-text fs-4 fw-bold">{{ in_today|sub:out_today|floatformat:2 }}</p>
+                    </div>
+                    <i class="bi bi-calculator-fill h1 opacity-50"></i>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CashBox Balances -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h2 class="h5 mb-0"><i class="bi bi-wallet2 me-2"></i>أرصدة الخزائن</h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="ps-4">الخزنة</th>
+                            <th scope="col">العملة</th>
+                            <th scope="col" class="text-end pe-4">الرصيد الحالي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for box, balance in boxes %}
+                        <tr>
+                            <td class="ps-4">{{ box.name }}</td>
+                            <td><span class="badge bg-secondary">{{ box.currency }}</span></td>
+                            <td class="text-end pe-4 fw-bold">{{ balance|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center p-4">
+                                <p class="mb-0">لا يوجد خزائن معرفة بعد.</p>
+                                <small>يمكنك إضافة خزائن جديدة من لوحة تحكم المدير.</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
