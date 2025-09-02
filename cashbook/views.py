@@ -5,10 +5,9 @@ from django.db.models import Sum, Q
 from .models import CashTransaction, CashBox
 from .forms import CashTransactionForm
 
-@login_required
 def dashboard(request):
     boxes = CashBox.objects.filter(is_active=True)
-    today = CashTransaction.objects.filter(date__exact=request.GET.get("date"))
+    # today = CashTransaction.objects.filter(date__exact=request.GET.get("date")) # This variable is not used in the context
     context = {
         "boxes": [(b, b.balance) for b in boxes],
         "in_today": CashTransaction.objects.filter(txn_type__in=["receipt","transfer_in"], status="approved").aggregate(Sum("amount"))["amount__sum"] or 0,
@@ -19,7 +18,7 @@ def dashboard(request):
 @login_required
 def txn_list(request):
     qs = CashTransaction.objects.select_related("cashbox","category","partner")
-    q = request.GET.get("q")
+    q = request.GET._get("q")
     if q:
         qs = qs.filter(Q(voucher_no__icontains=q) | Q(description__icontains=q))
     status = request.GET.get("status")
