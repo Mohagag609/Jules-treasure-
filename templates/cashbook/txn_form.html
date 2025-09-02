@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}سند جديد{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>إنشاء سند جديد</h1>
+    <div class="row">
+        <div class="col-md-8">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary mt-3">حفظ السند</button>
+                <a href="{% url 'txn_list' %}" class="btn btn-secondary mt-3">إلغاء</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

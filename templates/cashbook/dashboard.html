@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}الرئيسية - برنامج الخزينة{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">لوحة التحكم</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <h2>أرصدة الخزائن</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>الخزنة</th>
+                        <th>الرصيد الحالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for box, balance in boxes %}
+                    <tr>
+                        <td>{{ box.name }}</td>
+                        <td>{{ balance|floatformat:2 }} {{ box.currency }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2">لا يوجد خزائن معرفة.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    ملخص اليوم
+                </div>
+                <div class="card-body">
+                    <p><strong>إجمالي الإيرادات المعتمدة:</strong> <span class="text-success">{{ in_today|floatformat:2 }}</span></p>
+                    <p><strong>إجمالي المصروفات المعتمدة:</strong> <span class="text-danger">{{ out_today|floatformat:2 }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}قائمة الحركات{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>قائمة الحركات</h1>
+        <a href="{% url 'txn_create' %}" class="btn btn-primary">إضافة سند جديد</a>
+    </div>
+
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="بحث بالرقم أو الوصف..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">كل الحالات</option>
+                    <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>مسودة</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>معتمد</option>
+                    <option value="void" {% if request.GET.status == 'void' %}selected{% endif %}>ملغي</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-secondary">بحث</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>رقم السند</th>
+                <th>التاريخ</th>
+                <th>الخزنة</th>
+                <th>النوع</th>
+                <th>المبلغ</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in txns %}
+            <tr>
+                <td>{{ txn.voucher_no }}</td>
+                <td>{{ txn.date }}</td>
+                <td>{{ txn.cashbox }}</td>
+                <td>{{ txn.get_txn_type_display }}</td>
+                <td>{{ txn.amount|floatformat:2 }}</td>
+                <td>
+                    <span class="badge
+                        {% if txn.status == 'approved' %}bg-success{% elif txn.status == 'draft' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                        {{ txn.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if txn.status == 'draft' and perms.cashbook.change_cashtransaction %}
+                    <a href="{% url 'txn_approve' txn.id %}" class="btn btn-sm btn-success">اعتماد</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">لا توجد حركات لعرضها.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
