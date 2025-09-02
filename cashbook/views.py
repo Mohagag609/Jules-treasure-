@@ -28,10 +28,15 @@ def dashboard(request):
         (MockBox("خزنة العهدة", "USD"), Decimal("1200.00")),
     ]
 
+    in_today = Decimal("2500.00")
+    out_today = Decimal("850.75")
+    net_today = in_today - out_today
+
     context = {
         "boxes": fake_boxes_data,
-        "in_today": Decimal("2500.00"),
-        "out_today": Decimal("850.75"),
+        "in_today": in_today,
+        "out_today": out_today,
+        "net_today": net_today,
     }
     return render(request, "cashbook/dashboard.html", context)
 
