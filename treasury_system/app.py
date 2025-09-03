@@ -28,6 +28,11 @@ except Exception as e:
 def index():
     return render_template('index.html')
 
+# صفحة الخزائن المتدرجة
+@app.route('/safes-tree')
+def safes_tree():
+    return render_template('safes_tree.html')
+
 # ============= العملاء =============
 @app.route('/api/customers', methods=['GET', 'POST'])
 def handle_customers():
@@ -144,13 +149,33 @@ def handle_safes():
         safes = db.query(Safe).all()
         result = []
         for s in safes:
-            balance = get_previous_balance('safe', s.id)
+            # حساب الرصيد حسب نوع الخزينة
+            if s.is_container:
+                balance = get_container_safe_balance(s.id)
+            else:
+                balance = get_previous_balance('safe', s.id)
+            
+            # جمع معلومات الخزائن الفرعية
+            children_data = []
+            for child in s.children:
+                child_balance = get_container_safe_balance(child.id) if child.is_container else get_previous_balance('safe', child.id)
+                children_data.append({
+                    'id': child.id,
+                    'name': child.name,
+                    'balance': child_balance,
+                    'is_container': child.is_container
+                })
+            
             result.append({
                 'id': s.id,
                 'name': s.name,
                 'type': s.type,
                 'balance': balance,
                 'is_main': s.is_main,
+                'parent_safe_id': s.parent_safe_id,
+                'is_container': s.is_container,
+                'level': s.level,
+                'children': children_data,
                 'created_at': s.created_at.isoformat()
             })
         db.close()
@@ -158,23 +183,101 @@ def handle_safes():
     
     elif request.method == 'POST':
         data = request.json
+        
+        # تحديد المستوى بناءً على الخزينة الأم
+        parent_id = data.get('parent_safe_id')
+        level = 0
+        if parent_id:
+            parent = db.query(Safe).filter_by(id=parent_id).first()
+            if parent:
+                level = parent.level + 1
+        
         safe = Safe(
             name=data['name'],
             type=data.get('type', 'branch'),
-            is_main=data.get('is_main', False)
+            is_main=data.get('is_main', False),
+            parent_safe_id=parent_id,
+            is_container=data.get('is_container', False),
+            level=level
         )
         db.add(safe)
         db.commit()
         db.refresh(safe)
+        
         result = {
             'id': safe.id,
             'name': safe.name,
             'type': safe.type,
             'balance': 0,
-            'is_main': safe.is_main
+            'is_main': safe.is_main,
+            'parent_safe_id': safe.parent_safe_id,
+            'is_container': safe.is_container,
+            'level': safe.level
         }
         db.close()
         return jsonify(result), 201
+
+# ============= الخزائن الهرمية =============
+@app.route('/api/safes/tree')
+def get_safes_tree():
+    """الحصول على الخزائن بشكل هرمي"""
+    db = SessionLocal()
+    
+    # جلب الخزائن الرئيسية فقط (بدون أب)
+    root_safes = db.query(Safe).filter(Safe.parent_safe_id == None).all()
+    
+    def build_tree(safe):
+        """بناء شجرة الخزائن بشكل تكراري"""
+        if safe.is_container:
+            balance = get_container_safe_balance(safe.id)
+        else:
+            balance = get_previous_balance('safe', safe.id)
+        
+        node = {
+            'id': safe.id,
+            'name': safe.name,
+            'type': safe.type,
+            'balance': balance,
+            'is_container': safe.is_container,
+            'level': safe.level,
+            'children': []
+        }
+        
+        # إضافة الخزائن الفرعية
+        for child in safe.children:
+            node['children'].append(build_tree(child))
+        
+        return node
+    
+    tree = []
+    for safe in root_safes:
+        tree.append(build_tree(safe))
+    
+    db.close()
+    return jsonify(tree)
+
+@app.route('/api/safes/validate-transaction', methods=['POST'])
+def validate_safe_transaction():
+    """التحقق من صلاحية المعاملة على الخزينة"""
+    data = request.json
+    safe_id = data.get('safe_id')
+    
+    db = SessionLocal()
+    safe = db.query(Safe).filter_by(id=safe_id).first()
+    
+    if not safe:
+        db.close()
+        return jsonify({'valid': False, 'message': 'الخزينة غير موجودة'}), 404
+    
+    if safe.is_container:
+        db.close()
+        return jsonify({
+            'valid': False, 
+            'message': f'الخزينة "{safe.name}" هي خزينة حاوية ولا يمكن إجراء معاملات مباشرة عليها. يرجى اختيار إحدى الخزائن الفرعية.'
+        }), 400
+    
+    db.close()
+    return jsonify({'valid': True, 'message': 'يمكن إجراء المعاملة'})
 
 # ============= الفئات =============
 @app.route('/api/categories', methods=['GET', 'POST'])

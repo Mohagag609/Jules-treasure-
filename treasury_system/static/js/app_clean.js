@@ -112,6 +112,25 @@ async function handleQuickEntry(e) {
         return;
     }
     
+    // التحقق من صلاحية الخزينة للمعاملات
+    try {
+        const validateResponse = await fetch('/api/safes/validate-transaction', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({safe_id: safeId})
+        });
+        
+        const validation = await validateResponse.json();
+        if (!validation.valid) {
+            showMessage(validation.message, 'danger');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+    } catch (error) {
+        console.error('Validation error:', error);
+    }
+    
     // تحديد الخزينة حسب النوع
     if (formData.voucher_type === 'receipt') {
         formData.safe_to_id = parseInt(safeId);

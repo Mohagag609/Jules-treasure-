@@ -57,18 +57,25 @@ class Supplier(Base):
     # العلاقات
     vouchers = relationship("Voucher", back_populates="supplier", cascade="all, delete-orphan")
 
-# نموذج الخزائن
+# نموذج الخزائن - محدث للنظام المتدرج
 class Safe(Base):
     __tablename__ = "safes"
     
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(200), nullable=False)
-    type = Column(String(50))  # main, branch
+    type = Column(String(50))  # main, branch, sub-branch
     balance = Column(Float, default=0.0)
     is_main = Column(Boolean, default=False)
+    
+    # حقول جديدة للنظام المتدرج
+    parent_safe_id = Column(Integer, ForeignKey("safes.id"), nullable=True)
+    is_container = Column(Boolean, default=False)  # هل خزينة حاوية فقط؟
+    level = Column(Integer, default=0)  # 0=رئيسية، 1=فرعية، 2=فرعية من فرعية
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # العلاقات
+    parent = relationship("Safe", remote_side=[id], backref="children")
     vouchers_from = relationship("Voucher", foreign_keys="Voucher.safe_from_id", back_populates="safe_from")
     vouchers_to = relationship("Voucher", foreign_keys="Voucher.safe_to_id", back_populates="safe_to")
 
@@ -204,3 +211,53 @@ def get_previous_balance(entity_type, entity_id, before_date=None, before_vouche
     
     db.close()
     return balance
+
+# دالة جديدة لحساب رصيد الخزينة الحاوية
+def get_container_safe_balance(safe_id):
+    """حساب رصيد الخزينة الحاوية من مجموع الخزائن الفرعية"""
+    db = SessionLocal()
+    safe = db.query(Safe).filter_by(id=safe_id).first()
+    
+    if not safe or not safe.is_container:
+        db.close()
+        return get_previous_balance('safe', safe_id) if safe else 0
+    
+    total_balance = 0
+    
+    # حساب مجموع أرصدة الخزائن الفرعية
+    for child in safe.children:
+        if child.is_container:
+            # إذا كانت الفرعية أيضاً حاوية، احسب مجموع فرعياتها
+            total_balance += get_container_safe_balance(child.id)
+        else:
+            # إذا كانت خزينة عادية، احسب رصيدها
+            total_balance += get_previous_balance('safe', child.id)
+    
+    db.close()
+    return total_balance
+
+# دالة لإنشاء خزينة فرعية
+def create_sub_safe(parent_id, name, is_container=False):
+    """إنشاء خزينة فرعية تحت خزينة أخرى"""
+    db = SessionLocal()
+    
+    parent = db.query(Safe).filter_by(id=parent_id).first()
+    if not parent:
+        db.close()
+        return None
+    
+    sub_safe = Safe(
+        name=name,
+        type='sub-branch',
+        parent_safe_id=parent_id,
+        is_container=is_container,
+        level=parent.level + 1,
+        is_main=False
+    )
+    
+    db.add(sub_safe)
+    db.commit()
+    db.refresh(sub_safe)
+    db.close()
+    
+    return sub_safe
