@@ -3,6 +3,7 @@ from flask_cors import CORS
 from sqlalchemy.orm import Session
 import sys
 import os
+from project_routes import project_bp
 
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -14,6 +15,9 @@ import io
 
 app = Flask(__name__)
 CORS(app)
+
+# Register project blueprint
+app.register_blueprint(project_bp)
 
 # Initialize database on startup
 try:
@@ -42,6 +46,14 @@ def customers_tree():
 @app.route('/suppliers-tree')
 def suppliers_tree():
     return render_template('suppliers_tree.html')
+
+@app.route('/projects')
+def projects_page():
+    return render_template('projects.html')
+
+@app.route('/project/<int:project_id>')
+def project_detail(project_id):
+    return render_template('project_detail.html', project_id=project_id)
 
 # ============= العملاء =============
 @app.route('/api/customers', methods=['GET', 'POST'])
