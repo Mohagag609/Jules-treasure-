@@ -789,7 +789,8 @@
                                     <th>المبلغ</th>
                                     <th>التاريخ</th>
                                     <th>الوصف</th>
-                                    <th>الإجراءات</th>
+                                    <th>الطرف</th>
+                                <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="vouchersTable">
@@ -872,442 +873,200 @@
         <div class="spinner"></div>
     </div>
     
+    <!-- Modals -->
+    <!-- Safe Modal -->
+    <div class="modal fade" id="safeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="safeModalTitle">إضافة خزينة</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="safeForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم الخزينة</label>
+                            <input type="text" class="form-control" id="safeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الخزينة الأم (اختياري)</label>
+                            <select class="form-select" id="parentSafe">
+                                <option value="">-- خزينة رئيسية --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isContainer">
+                                <label class="form-check-label" for="isContainer">
+                                    خزينة حاوية (لا تقبل معاملات مباشرة)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSafe()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Modal -->
+    <div class="modal fade" id="customerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="customerModalTitle">إضافة عميل</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="customerForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم العميل</label>
+                            <input type="text" class="form-control" id="customerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="customerPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العنوان</label>
+                            <textarea class="form-control" id="customerAddress" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الشركة/العميل الرئيسي (اختياري)</label>
+                            <select class="form-select" id="parentCustomer">
+                                <option value="">-- عميل رئيسي --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isCustomerGroup">
+                                <label class="form-check-label" for="isCustomerGroup">
+                                    شركة/مجموعة (لها فروع)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" onclick="saveCustomer()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Supplier Modal -->
+    <div class="modal fade" id="supplierModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="supplierModalTitle">إضافة مورد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="supplierForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم المورد</label>
+                            <input type="text" class="form-control" id="supplierName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="supplierPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العنوان</label>
+                            <textarea class="form-control" id="supplierAddress" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الشركة/المورد الرئيسي (اختياري)</label>
+                            <select class="form-select" id="parentSupplier">
+                                <option value="">-- مورد رئيسي --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isSupplierGroup">
+                                <label class="form-check-label" for="isSupplierGroup">
+                                    شركة/مجموعة (لها فروع)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-warning" onclick="saveSupplier()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Voucher Modal -->
+    <div class="modal fade" id="voucherModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="voucherModalTitle">إضافة سند</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="voucherForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">نوع السند</label>
+                                    <select class="form-select" id="voucherType" onchange="updateVoucherForm()">
+                                        <option value="receipt">سند قبض</option>
+                                        <option value="payment">سند صرف</option>
+                                        <option value="transfer">تحويل بين خزائن</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">المبلغ</label>
+                                    <input type="number" class="form-control" id="voucherAmount" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">الخزينة</label>
+                                    <select class="form-select" id="voucherSafe" required>
+                                        <option value="">اختر الخزينة</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="entitySection">
+                                <div class="mb-3">
+                                    <label class="form-label" id="entityLabel">العميل</label>
+                                    <select class="form-select" id="voucherEntity">
+                                        <option value="">اختر</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الوصف</label>
+                            <textarea class="form-control" id="voucherDescription" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-info text-white" onclick="saveVoucher()">حفظ السند</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script>
-        // Global Variables
-        let currentPage = 'dashboard';
-        let safesData = [];
-        let customersData = [];
-        let suppliersData = [];
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupEventListeners();
-            loadDashboard();
-        });
-        
-        // Setup Event Listeners
-        function setupEventListeners() {
-            // Menu Toggle
-            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
-            
-            // Menu Links
-            document.querySelectorAll('.menu-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = this.dataset.page;
-                    navigateToPage(page);
-                });
-            });
-        }
-        
-        // Initialize App
-        function initializeApp() {
-            // Set active menu
-            updateActiveMenu('dashboard');
-        }
-        
-        // Toggle Sidebar
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainWrapper = document.getElementById('mainWrapper');
-            
-            sidebar.classList.toggle('collapsed');
-            mainWrapper.classList.toggle('expanded');
-        }
-        
-        // Navigate to Page
-        function navigateToPage(page) {
-            // Hide all pages
-            document.querySelectorAll('.page-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Show selected page
-            const pageElement = document.getElementById(`${page}-page`);
-            if (pageElement) {
-                pageElement.classList.add('active');
-            }
-            
-            // Update active menu
-            updateActiveMenu(page);
-            
-            // Update page title
-            updatePageTitle(page);
-            
-            // Load page data
-            loadPageData(page);
-            
-            currentPage = page;
-        }
-        
-        // Update Active Menu
-        function updateActiveMenu(page) {
-            document.querySelectorAll('.menu-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.dataset.page === page) {
-                    link.classList.add('active');
-                }
-            });
-        }
-        
-        // Update Page Title
-        function updatePageTitle(page) {
-            const titles = {
-                'dashboard': 'لوحة التحكم',
-                'safes': 'الخزائن المتدرجة',
-                'customers': 'العملاء',
-                'suppliers': 'الموردين',
-                'vouchers': 'السندات',
-                'reports': 'التقارير',
-                'settings': 'الإعدادات'
-            };
-            
-            document.getElementById('pageTitle').textContent = titles[page] || 'نظام الخزينة';
-        }
-        
-        // Load Page Data
-        function loadPageData(page) {
-            showLoading();
-            
-            switch(page) {
-                case 'dashboard':
-                    loadDashboard();
-                    break;
-                case 'safes':
-                    loadSafes();
-                    break;
-                case 'customers':
-                    loadCustomers();
-                    break;
-                case 'suppliers':
-                    loadSuppliers();
-                    break;
-                case 'vouchers':
-                    loadVouchers();
-                    break;
-            }
-            
-            setTimeout(hideLoading, 500);
-        }
-        
-        // Load Dashboard
-        async function loadDashboard() {
-            try {
-                // Load statistics
-                const [safesRes, customersRes, suppliersRes] = await Promise.all([
-                    fetch('/api/safes/tree'),
-                    fetch('/api/customers/tree'),
-                    fetch('/api/suppliers/tree')
-                ]);
-                
-                const safes = await safesRes.json();
-                const customers = await customersRes.json();
-                const suppliers = await suppliersRes.json();
-                
-                // Update stats
-                document.getElementById('totalBalance').textContent = formatNumber(calculateTotal(safes));
-                document.getElementById('totalCustomers').textContent = countItems(customers);
-                document.getElementById('totalSuppliers').textContent = countItems(suppliers);
-                document.getElementById('totalVouchers').textContent = Math.floor(Math.random() * 100);
-                
-                // Load recent transactions
-                loadRecentTransactions();
-                
-                // Draw chart
-                drawBalanceChart();
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-            }
-        }
-        
-        // Load Safes
-        async function loadSafes() {
-            try {
-                const response = await fetch('/api/safes/tree');
-                safesData = await response.json();
-                renderSafesTree();
-            } catch (error) {
-                console.error('Error loading safes:', error);
-            }
-        }
-        
-        // Load Customers
-        async function loadCustomers() {
-            try {
-                const response = await fetch('/api/customers/tree');
-                customersData = await response.json();
-                renderCustomersTree();
-            } catch (error) {
-                console.error('Error loading customers:', error);
-            }
-        }
-        
-        // Load Suppliers
-        async function loadSuppliers() {
-            try {
-                const response = await fetch('/api/suppliers/tree');
-                suppliersData = await response.json();
-                renderSuppliersTree();
-            } catch (error) {
-                console.error('Error loading suppliers:', error);
-            }
-        }
-        
-        // Load Vouchers
-        async function loadVouchers() {
-            try {
-                const response = await fetch('/api/vouchers?limit=20');
-                const vouchers = await response.json();
-                renderVouchersTable(vouchers);
-            } catch (error) {
-                console.error('Error loading vouchers:', error);
-            }
-        }
-        
-        // Render Safes Tree
-        function renderSafesTree() {
-            const container = document.getElementById('safesTree');
-            container.innerHTML = '';
-            
-            if (safesData.length === 0) {
-                container.innerHTML = '<div class="alert alert-info">لا توجد خزائن</div>';
-                return;
-            }
-            
-            safesData.forEach(safe => {
-                container.appendChild(createTreeItem(safe, 'safe'));
-            });
-        }
-        
-        // Render Customers Tree
-        function renderCustomersTree() {
-            const container = document.getElementById('customersTree');
-            container.innerHTML = '';
-            
-            if (customersData.length === 0) {
-                container.innerHTML = '<div class="alert alert-info">لا يوجد عملاء</div>';
-                return;
-            }
-            
-            customersData.forEach(customer => {
-                container.appendChild(createTreeItem(customer, 'customer'));
-            });
-        }
-        
-        // Render Suppliers Tree
-        function renderSuppliersTree() {
-            const container = document.getElementById('suppliersTree');
-            container.innerHTML = '';
-            
-            if (suppliersData.length === 0) {
-                container.innerHTML = '<div class="alert alert-info">لا يوجد موردين</div>';
-                return;
-            }
-            
-            suppliersData.forEach(supplier => {
-                container.appendChild(createTreeItem(supplier, 'supplier'));
-            });
-        }
-        
-        // Create Tree Item
-        function createTreeItem(item, type) {
-            const div = document.createElement('div');
-            div.className = 'tree-item';
-            
-            if (item.is_container || item.is_group) {
-                div.classList.add('parent');
-            }
-            
-            const icon = type === 'safe' ? 'fa-vault' : 
-                        type === 'customer' ? 'fa-user' : 'fa-truck';
-            
-            div.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas ${icon} me-2 text-primary"></i>
-                        <strong>${item.name}</strong>
-                        ${item.is_container || item.is_group ? 
-                            '<span class="badge bg-warning ms-2">مجموعة</span>' : ''}
-                    </div>
-                    <div>
-                        <span class="badge bg-${item.balance >= 0 ? 'success' : 'danger'}">
-                            ${formatMoney(item.balance || 0)}
-                        </span>
-                    </div>
-                </div>
-            `;
-            
-            // Add children
-            const children = item.children || item.branches;
-            if (children && children.length > 0) {
-                const childrenDiv = document.createElement('div');
-                childrenDiv.className = 'tree-children';
-                
-                children.forEach(child => {
-                    childrenDiv.appendChild(createTreeItem(child, type));
-                });
-                
-                div.appendChild(childrenDiv);
-            }
-            
-            return div;
-        }
-        
-        // Render Vouchers Table
-        function renderVouchersTable(vouchers) {
-            const tbody = document.getElementById('vouchersTable');
-            tbody.innerHTML = '';
-            
-            if (vouchers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">لا توجد سندات</td></tr>';
-                return;
-            }
-            
-            vouchers.forEach(voucher => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${voucher.voucher_number}</td>
-                    <td>
-                        <span class="badge bg-${voucher.voucher_type === 'receipt' ? 'success' : 'danger'}">
-                            ${voucher.voucher_type === 'receipt' ? 'قبض' : 'صرف'}
-                        </span>
-                    </td>
-                    <td>${formatMoney(voucher.amount)}</td>
-                    <td>${new Date(voucher.date).toLocaleDateString('ar-EG')}</td>
-                    <td>${voucher.description || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-        
-        // Load Recent Transactions
-        async function loadRecentTransactions() {
-            try {
-                const response = await fetch('/api/vouchers?limit=5');
-                const vouchers = await response.json();
-                
-                const tbody = document.getElementById('recentTransactions');
-                tbody.innerHTML = '';
-                
-                vouchers.forEach(v => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${v.voucher_number}</td>
-                        <td>
-                            <span class="badge bg-${v.voucher_type === 'receipt' ? 'success' : 'danger'}">
-                                ${v.voucher_type === 'receipt' ? 'قبض' : 'صرف'}
-                            </span>
-                        </td>
-                        <td>${formatMoney(v.amount)}</td>
-                        <td>${new Date(v.date).toLocaleDateString('ar-EG')}</td>
-                        <td><span class="badge bg-success">مكتمل</span></td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error loading transactions:', error);
-            }
-        }
-        
-        // Draw Balance Chart
-        function drawBalanceChart() {
-            const ctx = document.getElementById('balanceChart');
-            if (!ctx) return;
-            
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['الخزائن', 'العملاء', 'الموردين'],
-                    datasets: [{
-                        data: [45, 30, 25],
-                        backgroundColor: [
-                            'rgba(99, 102, 241, 0.8)',
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(245, 158, 11, 0.8)'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Helper Functions
-        function showLoading() {
-            document.getElementById('loadingOverlay').classList.add('show');
-        }
-        
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.remove('show');
-        }
-        
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('ar-EG', {
-                style: 'currency',
-                currency: 'EGP'
-            }).format(amount || 0);
-        }
-        
-        function formatNumber(num) {
-            return new Intl.NumberFormat('ar-EG').format(num || 0);
-        }
-        
-        function countItems(items) {
-            let count = 0;
-            function countRecursive(arr) {
-                arr.forEach(item => {
-                    count++;
-                    if (item.children || item.branches) {
-                        countRecursive(item.children || item.branches);
-                    }
-                });
-            }
-            countRecursive(items);
-            return count;
-        }
-        
-        function calculateTotal(items) {
-            let total = 0;
-            items.forEach(item => {
-                total += Math.abs(item.balance || 0);
-            });
-            return total;
-        }
-        
-        // Action Functions
-        function addSafe() {
-            alert('سيتم فتح نافذة إضافة خزينة');
-        }
-        
-        function addCustomer() {
-            alert('سيتم فتح نافذة إضافة عميل');
-        }
-        
-        function addSupplier() {
-            alert('سيتم فتح نافذة إضافة مورد');
-        }
-        
-        function addVoucher() {
-            alert('سيتم فتح نافذة إضافة سند');
-        }
-    </script>
+    <script src="/static/js/app.js"></script>
 </body>
 </html>
