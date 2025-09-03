@@ -20,6 +20,20 @@ const pool = new Pool({
 // Initialize database with schema
 export async function initializeDatabase() {
   try {
+    // Check if tables already exist
+    const tablesExist = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'projects'
+      );
+    `);
+    
+    if (tablesExist.rows[0].exists) {
+      console.log('Database tables already exist - skipping initialization');
+      return;
+    }
+    
     const schemaPath = path.join(process.cwd(), 'lib', 'db', 'postgres-schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
     
@@ -31,14 +45,23 @@ export async function initializeDatabase() {
     
     for (const statement of statements) {
       if (statement.trim() && statement.trim() !== ';') {
-        await pool.query(statement);
+        try {
+          await pool.query(statement);
+        } catch (err: any) {
+          // Ignore errors about existing objects
+          if (!err.message?.includes('already exists')) {
+            console.error('Error executing statement:', err.message);
+          }
+        }
       }
     }
     
     console.log('PostgreSQL Database initialized successfully');
-  } catch (error) {
-    console.error('Error initializing database:', error);
-    // Don't throw error to prevent app from crashing
+  } catch (error: any) {
+    // Only log if it's not a "already exists" error
+    if (!error.message?.includes('already exists')) {
+      console.error('Error initializing database:', error.message);
+    }
   }
 }
 
