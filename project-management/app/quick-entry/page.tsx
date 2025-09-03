@@ -143,9 +143,9 @@ export default function QuickEntryPage() {
             <h1 className="text-3xl font-bold text-gray-900">الإدخال السريع</h1>
             <p className="text-gray-500 mt-1">أدخل جميع البيانات من مكان واحد بسهولة</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">رصيد الخزينة المتوقع:</span>
-            <span className={`text-2xl font-bold ${treasuryBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
+            <span className="text-base font-bold text-gray-800">رصيد الخزينة المتوقع:</span>
+            <span className={`text-3xl font-black ${treasuryBalance >= 0 ? 'text-green-700' : 'text-red-700'}`}>
               {treasuryBalance.toLocaleString('ar-EG')} جنيه
             </span>
           </div>

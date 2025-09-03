@@ -182,8 +182,8 @@ export default function DashboardPage() {
                   {card.change}
                 </div>
               </div>
-              <h3 className="text-gray-500 text-sm mb-1">{card.title}</h3>
-              <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+              <h3 className="text-gray-700 text-sm font-semibold mb-1">{card.title}</h3>
+              <p className="text-3xl font-black text-gray-900">{card.value}</p>
             </div>
           );
         })}

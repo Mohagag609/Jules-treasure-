@@ -1,26 +1,433 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* تحسين وضوح النصوص والأرقام */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* جعل كل النصوص أغمق وأوضح */
+p, span, div, td, th, label {
+  color: #000000 !important;
+  font-weight: 600;
+  text-shadow: 0 0 1px rgba(0,0,0,0.1);
+}
+
+/* النصوص الثانوية */
+.text-gray-500 {
+  color: #4a4a4a !important;
+  font-weight: 500;
+}
+
+.text-gray-600 {
+  color: #3a3a3a !important;
+  font-weight: 500;
+}
+
+.text-gray-700 {
+  color: #2a2a2a !important;
+  font-weight: 600;
+}
+
+.text-gray-400 {
+  color: #5a5a5a !important;
+}
+
+/* العناوين */
+h1, h2, h3, h4, h5, h6 {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* الأرقام */
+.font-bold {
+  font-weight: 800 !important;
+  color: #000000 !important;
+}
+
+/* الجداول */
+table th {
+  background-color: #f3f4f6;
+  color: #111111 !important;
+  font-weight: 700 !important;
+}
+
+table td {
+  color: #1a1a1a !important;
+  font-weight: 500;
+}
+
+table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* الأزرار */
+button {
+  font-weight: 600 !important;
+}
+
+/* البطاقات */
+.bg-white {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+/* الحقول */
+input, select, textarea {
+  color: #000000 !important;
+  font-weight: 500;
+  background-color: #ffffff;
+  border: 2px solid #d1d5db !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #3b82f6 !important;
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #6b7280 !important;
+  font-weight: 400;
+}
+
+/* القائمة الجانبية */
+aside {
+  background-color: #ffffff !important;
+  border-left: 1px solid #e5e7eb;
+}
+
+aside a {
+  color: #1a1a1a !important;
+  font-weight: 600;
+}
+
+aside a:hover {
+  background-color: #f3f4f6;
+}
+
+/* البطاقات الملونة */
+.bg-blue-50 {
+  background-color: #eff6ff !important;
+}
+
+.bg-green-50 {
+  background-color: #f0fdf4 !important;
+}
+
+.bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+
+.bg-yellow-50 {
+  background-color: #fefce8 !important;
+}
+
+.bg-purple-50 {
+  background-color: #faf5ff !important;
+}
+
+.bg-orange-50 {
+  background-color: #fff7ed !important;
+}
+
+.bg-cyan-50 {
+  background-color: #ecfeff !important;
+}
+
+/* النصوص الملونة */
+.text-blue-600 {
+  color: #2563eb !important;
+  font-weight: 600;
+}
+
+.text-green-600 {
+  color: #16a34a !important;
+  font-weight: 600;
+}
+
+.text-red-600 {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.text-yellow-600 {
+  color: #ca8a04 !important;
+  font-weight: 600;
+}
+
+.text-purple-600 {
+  color: #9333ea !important;
+  font-weight: 600;
+}
+
+.text-orange-600 {
+  color: #ea580c !important;
+  font-weight: 600;
+}
+
+.text-cyan-600 {
+  color: #0891b2 !important;
+  font-weight: 600;
+}
+
+/* الأرقام الكبيرة */
+.text-2xl, .text-3xl, .text-xl {
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+/* تحسين التباين */
+.shadow-sm {
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* الحدود */
+.border {
+  border-color: #d1d5db !important;
+}
+
+.border-b {
+  border-bottom-color: #d1d5db !important;
+}
+
+.divide-y > * + * {
+  border-top-color: #e5e7eb !important;
+}
+
+/* تحسين قابلية القراءة */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* الأرقام العربية */
+[lang="ar"] {
+  font-family: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* تحسينات إضافية للوضوح */
+.text-sm {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+.text-base {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+}
+
+.text-lg {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+}
+
+.text-xl {
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+}
+
+.text-2xl {
+  font-size: 1.875rem !important;
+  font-weight: 900 !important;
+}
+
+.text-3xl {
+  font-size: 2.25rem !important;
+  font-weight: 900 !important;
+}
+
+/* تحسين الأرقام */
+.font-black {
+  font-weight: 900 !important;
+  letter-spacing: -0.02em;
+}
+
+/* إضافة خلفية خفيفة للنصوص المهمة */
+.font-bold {
+  background: linear-gradient(180deg, transparent 60%, rgba(59, 130, 246, 0.1) 60%);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* تحسين الجداول */
+table {
+  font-size: 1rem !important;
+}
+
+table th {
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+table td {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+/* الأزرار أوضح */
+button {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.025em;
+}
+
+/* الحقول أوضح */
+input, select, textarea {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+/* البطاقات */
+.rounded-xl {
+  border: 2px solid #e5e7eb;
+}
+
+/* تحسين التباين للألوان */
+.bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.bg-green-600 {
+  background-color: #16a34a !important;
+}
+
+.bg-red-600 {
+  background-color: #dc2626 !important;
+}
+
+/* الظلال أقوى */
+.shadow-sm {
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15) !important;
+}
+
+.shadow {
+  box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.15) !important;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* تحسين الـ hover states */
+.hover\:bg-gray-50:hover {
+  background-color: #f9fafb !important;
+}
+
+.hover\:shadow-lg:hover {
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15);
+}
+
+/* الـ badges والـ tags */
+.bg-green-100 {
+  background-color: #dcfce7 !important;
+}
+
+.bg-blue-100 {
+  background-color: #dbeafe !important;
+}
+
+.bg-red-100 {
+  background-color: #fee2e2 !important;
+}
+
+.bg-yellow-100 {
+  background-color: #fef3c7 !important;
+}
+
+.text-green-700 {
+  color: #15803d !important;
+  font-weight: 600;
+}
+
+.text-blue-700 {
+  color: #1d4ed8 !important;
+  font-weight: 600;
+}
+
+.text-red-700 {
+  color: #b91c1c !important;
+  font-weight: 600;
+}
+
+.text-yellow-700 {
+  color: #a16207 !important;
+  font-weight: 600;
 }

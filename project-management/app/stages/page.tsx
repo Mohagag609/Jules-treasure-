@@ -223,15 +223,15 @@ export default function StagesPage() {
                   <tr key={stage.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-gray-900">{stage.name}</p>
-                        <p className="text-sm text-gray-500">ID: {stage.id}</p>
+                        <p className="font-bold text-gray-900 text-base">{stage.name}</p>
+                        <p className="text-sm font-semibold text-gray-600">ID: {stage.id}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-medium">{stage.total_amount?.toLocaleString('ar-EG')} جنيه</p>
+                      <p className="font-bold text-gray-900 text-base">{stage.total_amount?.toLocaleString('ar-EG')} جنيه</p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-medium">{stage.remaining_amount?.toLocaleString('ar-EG')} جنيه</p>
+                      <p className="font-bold text-gray-900 text-base">{stage.remaining_amount?.toLocaleString('ar-EG')} جنيه</p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="w-full bg-gray-200 rounded-full h-2">

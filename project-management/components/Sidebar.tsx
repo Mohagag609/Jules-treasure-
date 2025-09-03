@@ -119,7 +119,7 @@ export default function Sidebar() {
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? item.color : 'text-gray-500'}`} />
-                  <span className={`font-medium ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
+                  <span className={`font-bold ${isActive ? 'text-gray-900 text-base' : 'text-gray-800'}`}>
                     {item.title}
                   </span>
                   {isActive && (
