@@ -3,11 +3,12 @@ import { getStageReport } from '@/lib/db-operations';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const stageId = parseInt(params.id);
-    const report = getStageReport(stageId);
+    const report = await getStageReport(stageId);
     
     if (!report.stage) {
       return NextResponse.json(

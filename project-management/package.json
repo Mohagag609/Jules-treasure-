@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start"
+    "build": "next build",
+    "start": "next start",
+    "postinstall": "node -e \"require('./lib/db.ts').initializeDatabase().catch(console.error)\""
   },
   "dependencies": {
     "@types/pg": "^8.15.5",

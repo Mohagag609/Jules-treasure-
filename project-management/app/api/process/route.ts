@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
     
     // معالجة البيانات
-    const result = processUnifiedInput(data);
+    const result = await processUnifiedInput(data);
     
     return NextResponse.json({
       success: true,

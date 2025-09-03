@@ -1,67 +1,89 @@
-import db from './db';
+import pool from './db';
 import { Stage, Partner, StagePartner, Supplier, Payment, Settlement, Treasury, UnifiedInput, PartnerBalance } from './types';
 
 // عمليات المراحل
 export const stageOperations = {
-  create: (stage: Stage) => {
-    const stmt = db.prepare('INSERT INTO stages (name, total_amount, remaining_amount) VALUES (?, ?, ?)');
-    const result = stmt.run(stage.name, stage.total_amount, stage.total_amount);
-    
-    // إنشاء سجل خزينة للمرحلة
-    const treasuryStmt = db.prepare('INSERT INTO treasury (stage_id, balance) VALUES (?, ?)');
-    treasuryStmt.run(result.lastInsertRowid, 0);
-    
-    return result.lastInsertRowid;
+  create: async (stage: Stage) => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      const result = await client.query(
+        'INSERT INTO stages (name, total_amount, remaining_amount) VALUES ($1, $2, $3) RETURNING id',
+        [stage.name, stage.total_amount, stage.total_amount]
+      );
+      
+      const stageId = result.rows[0].id;
+      
+      // إنشاء سجل خزينة للمرحلة
+      await client.query(
+        'INSERT INTO treasury (stage_id, balance) VALUES ($1, $2)',
+        [stageId, 0]
+      );
+      
+      await client.query('COMMIT');
+      return stageId;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   },
   
-  getAll: () => {
-    const stmt = db.prepare('SELECT * FROM stages ORDER BY created_at DESC');
-    return stmt.all();
+  getAll: async () => {
+    const result = await pool.query('SELECT * FROM stages ORDER BY created_at DESC');
+    return result.rows;
   },
   
-  getById: (id: number) => {
-    const stmt = db.prepare('SELECT * FROM stages WHERE id = ?');
-    return stmt.get(id);
+  getById: async (id: number) => {
+    const result = await pool.query('SELECT * FROM stages WHERE id = $1', [id]);
+    return result.rows[0];
   },
   
-  update: (id: number, stage: Partial<Stage>) => {
-    const stmt = db.prepare('UPDATE stages SET name = ?, total_amount = ? WHERE id = ?');
-    return stmt.run(stage.name, stage.total_amount, id);
+  update: async (id: number, stage: Partial<Stage>) => {
+    const result = await pool.query(
+      'UPDATE stages SET name = $1, total_amount = $2 WHERE id = $3',
+      [stage.name, stage.total_amount, id]
+    );
+    return result;
   },
   
-  delete: (id: number) => {
-    const stmt = db.prepare('DELETE FROM stages WHERE id = ?');
-    return stmt.run(id);
+  delete: async (id: number) => {
+    const result = await pool.query('DELETE FROM stages WHERE id = $1', [id]);
+    return result;
   }
 };
 
 // عمليات الشركاء
 export const partnerOperations = {
-  create: (partner: Partner) => {
-    const stmt = db.prepare('INSERT INTO partners (name) VALUES (?)');
-    const result = stmt.run(partner.name);
-    return result.lastInsertRowid;
+  create: async (partner: Partner) => {
+    const result = await pool.query(
+      'INSERT INTO partners (name) VALUES ($1) RETURNING id',
+      [partner.name]
+    );
+    return result.rows[0].id;
   },
   
-  getAll: () => {
-    const stmt = db.prepare('SELECT * FROM partners ORDER BY name');
-    return stmt.all();
+  getAll: async () => {
+    const result = await pool.query('SELECT * FROM partners ORDER BY name');
+    return result.rows;
   },
   
-  getById: (id: number) => {
-    const stmt = db.prepare('SELECT * FROM partners WHERE id = ?');
-    return stmt.get(id);
+  getById: async (id: number) => {
+    const result = await pool.query('SELECT * FROM partners WHERE id = $1', [id]);
+    return result.rows[0];
   },
   
-  getByName: (name: string) => {
-    const stmt = db.prepare('SELECT * FROM partners WHERE name = ?');
-    return stmt.get(name);
+  getByName: async (name: string) => {
+    const result = await pool.query('SELECT * FROM partners WHERE name = $1', [name]);
+    return result.rows[0];
   },
   
-  getOrCreate: (name: string) => {
-    let partner = partnerOperations.getByName(name);
+  getOrCreate: async (name: string) => {
+    let partner = await partnerOperations.getByName(name);
     if (!partner) {
-      const id = partnerOperations.create({ name });
+      const id = await partnerOperations.create({ name });
       partner = { id, name };
     }
     return partner;
@@ -70,26 +92,28 @@ export const partnerOperations = {
 
 // عمليات الموردين
 export const supplierOperations = {
-  create: (supplier: Supplier) => {
-    const stmt = db.prepare('INSERT INTO suppliers (name) VALUES (?)');
-    const result = stmt.run(supplier.name);
-    return result.lastInsertRowid;
+  create: async (supplier: Supplier) => {
+    const result = await pool.query(
+      'INSERT INTO suppliers (name) VALUES ($1) RETURNING id',
+      [supplier.name]
+    );
+    return result.rows[0].id;
   },
   
-  getAll: () => {
-    const stmt = db.prepare('SELECT * FROM suppliers ORDER BY name');
-    return stmt.all();
+  getAll: async () => {
+    const result = await pool.query('SELECT * FROM suppliers ORDER BY name');
+    return result.rows;
   },
   
-  getByName: (name: string) => {
-    const stmt = db.prepare('SELECT * FROM suppliers WHERE name = ?');
-    return stmt.get(name);
+  getByName: async (name: string) => {
+    const result = await pool.query('SELECT * FROM suppliers WHERE name = $1', [name]);
+    return result.rows[0];
   },
   
-  getOrCreate: (name: string) => {
-    let supplier = supplierOperations.getByName(name);
+  getOrCreate: async (name: string) => {
+    let supplier = await supplierOperations.getByName(name);
     if (!supplier) {
-      const id = supplierOperations.create({ name });
+      const id = await supplierOperations.create({ name });
       supplier = { id, name };
     }
     return supplier;
@@ -98,168 +122,186 @@ export const supplierOperations = {
 
 // عمليات شركاء المراحل
 export const stagePartnerOperations = {
-  create: (stagePartner: StagePartner) => {
-    const stmt = db.prepare('INSERT INTO stage_partners (stage_id, partner_id, percentage) VALUES (?, ?, ?)');
-    return stmt.run(stagePartner.stage_id, stagePartner.partner_id, stagePartner.percentage);
+  create: async (stagePartner: StagePartner) => {
+    const result = await pool.query(
+      'INSERT INTO stage_partners (stage_id, partner_id, percentage) VALUES ($1, $2, $3)',
+      [stagePartner.stage_id, stagePartner.partner_id, stagePartner.percentage]
+    );
+    return result;
   },
   
-  getByStage: (stageId: number) => {
-    const stmt = db.prepare(`
+  getByStage: async (stageId: number) => {
+    const result = await pool.query(`
       SELECT sp.*, p.name as partner_name 
       FROM stage_partners sp
       JOIN partners p ON sp.partner_id = p.id
-      WHERE sp.stage_id = ?
-    `);
-    return stmt.all(stageId);
+      WHERE sp.stage_id = $1
+    `, [stageId]);
+    return result.rows;
   },
   
-  update: (id: number, percentage: number) => {
-    const stmt = db.prepare('UPDATE stage_partners SET percentage = ? WHERE id = ?');
-    return stmt.run(percentage, id);
+  update: async (id: number, percentage: number) => {
+    const result = await pool.query(
+      'UPDATE stage_partners SET percentage = $1 WHERE id = $2',
+      [percentage, id]
+    );
+    return result;
   },
   
-  delete: (id: number) => {
-    const stmt = db.prepare('DELETE FROM stage_partners WHERE id = ?');
-    return stmt.run(id);
+  delete: async (id: number) => {
+    const result = await pool.query('DELETE FROM stage_partners WHERE id = $1', [id]);
+    return result;
   }
 };
 
 // عمليات المدفوعات
 export const paymentOperations = {
-  create: (payment: Payment) => {
-    const stmt = db.prepare(`
-      INSERT INTO payments (stage_id, partner_id, supplier_id, amount, payment_type, description)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    const result = stmt.run(
-      payment.stage_id,
-      payment.partner_id || null,
-      payment.supplier_id || null,
-      payment.amount,
-      payment.payment_type,
-      payment.description || null
-    );
-    
-    // تحديث الخزينة
-    if (payment.payment_type === 'from_partner') {
-      treasuryOperations.addToBalance(payment.stage_id, payment.amount);
-    } else if (payment.payment_type === 'to_supplier') {
-      treasuryOperations.subtractFromBalance(payment.stage_id, payment.amount);
+  create: async (payment: Payment) => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      const result = await client.query(
+        `INSERT INTO payments (stage_id, partner_id, supplier_id, amount, payment_type, description)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [
+          payment.stage_id,
+          payment.partner_id || null,
+          payment.supplier_id || null,
+          payment.amount,
+          payment.payment_type,
+          payment.description || null
+        ]
+      );
+      
+      // تحديث الخزينة
+      if (payment.payment_type === 'from_partner') {
+        await treasuryOperations.addToBalance(payment.stage_id, payment.amount, client);
+      } else if (payment.payment_type === 'to_supplier') {
+        await treasuryOperations.subtractFromBalance(payment.stage_id, payment.amount, client);
+      }
+      
+      await client.query('COMMIT');
+      return result.rows[0].id;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-    
-    return result.lastInsertRowid;
   },
   
-  getByStage: (stageId: number) => {
-    const stmt = db.prepare(`
+  getByStage: async (stageId: number) => {
+    const result = await pool.query(`
       SELECT p.*, 
              part.name as partner_name,
              sup.name as supplier_name
       FROM payments p
       LEFT JOIN partners part ON p.partner_id = part.id
       LEFT JOIN suppliers sup ON p.supplier_id = sup.id
-      WHERE p.stage_id = ?
+      WHERE p.stage_id = $1
       ORDER BY p.payment_date DESC
-    `);
-    return stmt.all(stageId);
+    `, [stageId]);
+    return result.rows;
   },
   
-  getPartnerPayments: (stageId: number, partnerId: number) => {
-    const stmt = db.prepare(`
+  getPartnerPayments: async (stageId: number, partnerId: number) => {
+    const result = await pool.query(`
       SELECT SUM(amount) as total
       FROM payments
-      WHERE stage_id = ? AND partner_id = ? AND payment_type = 'from_partner'
-    `);
-    const result = stmt.get(stageId, partnerId) as any;
-    return result?.total || 0;
+      WHERE stage_id = $1 AND partner_id = $2 AND payment_type = 'from_partner'
+    `, [stageId, partnerId]);
+    return parseFloat(result.rows[0]?.total || '0');
   },
   
-  getSupplierPayments: (stageId: number) => {
-    const stmt = db.prepare(`
+  getSupplierPayments: async (stageId: number) => {
+    const result = await pool.query(`
       SELECT SUM(amount) as total
       FROM payments
-      WHERE stage_id = ? AND payment_type = 'to_supplier'
-    `);
-    const result = stmt.get(stageId) as any;
-    return result?.total || 0;
+      WHERE stage_id = $1 AND payment_type = 'to_supplier'
+    `, [stageId]);
+    return parseFloat(result.rows[0]?.total || '0');
   }
 };
 
 // عمليات الخزينة
 export const treasuryOperations = {
-  getByStage: (stageId: number) => {
-    const stmt = db.prepare('SELECT * FROM treasury WHERE stage_id = ?');
-    return stmt.get(stageId);
+  getByStage: async (stageId: number) => {
+    const result = await pool.query('SELECT * FROM treasury WHERE stage_id = $1', [stageId]);
+    return result.rows[0];
   },
   
-  addToBalance: (stageId: number, amount: number) => {
-    const stmt = db.prepare(`
+  addToBalance: async (stageId: number, amount: number, client?: any) => {
+    const queryClient = client || pool;
+    const result = await queryClient.query(`
       UPDATE treasury 
-      SET balance = balance + ?, last_updated = CURRENT_TIMESTAMP
-      WHERE stage_id = ?
-    `);
-    return stmt.run(amount, stageId);
+      SET balance = balance + $1, last_updated = CURRENT_TIMESTAMP
+      WHERE stage_id = $2
+    `, [amount, stageId]);
+    return result;
   },
   
-  subtractFromBalance: (stageId: number, amount: number) => {
-    const stmt = db.prepare(`
+  subtractFromBalance: async (stageId: number, amount: number, client?: any) => {
+    const queryClient = client || pool;
+    const result = await queryClient.query(`
       UPDATE treasury 
-      SET balance = balance - ?, last_updated = CURRENT_TIMESTAMP
-      WHERE stage_id = ?
-    `);
-    return stmt.run(amount, stageId);
+      SET balance = balance - $1, last_updated = CURRENT_TIMESTAMP
+      WHERE stage_id = $2
+    `, [amount, stageId]);
+    return result;
   },
   
-  setBalance: (stageId: number, balance: number) => {
-    const stmt = db.prepare(`
+  setBalance: async (stageId: number, balance: number) => {
+    const result = await pool.query(`
       UPDATE treasury 
-      SET balance = ?, last_updated = CURRENT_TIMESTAMP
-      WHERE stage_id = ?
-    `);
-    return stmt.run(balance, stageId);
+      SET balance = $1, last_updated = CURRENT_TIMESTAMP
+      WHERE stage_id = $2
+    `, [balance, stageId]);
+    return result;
   }
 };
 
 // عمليات التسوية
 export const settlementOperations = {
-  create: (settlement: Settlement) => {
-    const stmt = db.prepare(`
-      INSERT INTO settlements (stage_id, from_partner_id, to_partner_id, amount, description)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    return stmt.run(
-      settlement.stage_id,
-      settlement.from_partner_id,
-      settlement.to_partner_id,
-      settlement.amount,
-      settlement.description || null
+  create: async (settlement: Settlement) => {
+    const result = await pool.query(
+      `INSERT INTO settlements (stage_id, from_partner_id, to_partner_id, amount, description)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        settlement.stage_id,
+        settlement.from_partner_id,
+        settlement.to_partner_id,
+        settlement.amount,
+        settlement.description || null
+      ]
     );
+    return result;
   },
   
-  getByStage: (stageId: number) => {
-    const stmt = db.prepare(`
+  getByStage: async (stageId: number) => {
+    const result = await pool.query(`
       SELECT s.*,
              fp.name as from_partner_name,
              tp.name as to_partner_name
       FROM settlements s
       JOIN partners fp ON s.from_partner_id = fp.id
       JOIN partners tp ON s.to_partner_id = tp.id
-      WHERE s.stage_id = ?
+      WHERE s.stage_id = $1
       ORDER BY s.settlement_date DESC
-    `);
-    return stmt.all(stageId);
+    `, [stageId]);
+    return result.rows;
   }
 };
 
 // حساب أرصدة الشركاء
-export function calculatePartnerBalances(stageId: number): PartnerBalance[] {
-  const stage = stageOperations.getById(stageId) as any;
-  const stagePartners = stagePartnerOperations.getByStage(stageId) as any[];
+export async function calculatePartnerBalances(stageId: number): Promise<PartnerBalance[]> {
+  const stage = await stageOperations.getById(stageId);
+  const stagePartners = await stagePartnerOperations.getByStage(stageId);
   const balances: PartnerBalance[] = [];
   
   for (const sp of stagePartners) {
-    const expectedPayment = (stage.total_amount * sp.percentage) / 100;
-    const actualPayment = paymentOperations.getPartnerPayments(stageId, sp.partner_id);
+    const expectedPayment = (parseFloat(stage.total_amount) * parseFloat(sp.percentage)) / 100;
+    const actualPayment = await paymentOperations.getPartnerPayments(stageId, sp.partner_id);
     const difference = actualPayment - expectedPayment;
     
     balances.push({
@@ -278,52 +320,103 @@ export function calculatePartnerBalances(stageId: number): PartnerBalance[] {
 }
 
 // معالجة المدخل الموحد
-export function processUnifiedInput(input: UnifiedInput) {
-  return db.transaction(() => {
+export async function processUnifiedInput(input: UnifiedInput) {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
     // 1. إنشاء المرحلة
-    const stageId = stageOperations.create(input.stage) as number;
+    const stageResult = await client.query(
+      'INSERT INTO stages (name, total_amount, remaining_amount) VALUES ($1, $2, $3) RETURNING id',
+      [input.stage.name, input.stage.total_amount, input.stage.total_amount]
+    );
+    const stageId = stageResult.rows[0].id;
+    
+    // إنشاء سجل خزينة
+    await client.query(
+      'INSERT INTO treasury (stage_id, balance) VALUES ($1, $2)',
+      [stageId, 0]
+    );
     
     // 2. إضافة الشركاء ونسبهم ومدفوعاتهم
     for (const partnerData of input.partners) {
-      const partner = partnerOperations.getOrCreate(partnerData.name) as any;
+      // الحصول على الشريك أو إنشاؤه
+      let partnerResult = await client.query(
+        'SELECT * FROM partners WHERE name = $1',
+        [partnerData.name]
+      );
+      
+      let partnerId;
+      if (partnerResult.rows.length === 0) {
+        const insertResult = await client.query(
+          'INSERT INTO partners (name) VALUES ($1) RETURNING id',
+          [partnerData.name]
+        );
+        partnerId = insertResult.rows[0].id;
+      } else {
+        partnerId = partnerResult.rows[0].id;
+      }
       
       // إضافة الشريك للمرحلة مع نسبته
-      stagePartnerOperations.create({
-        stage_id: stageId,
-        partner_id: partner.id,
-        percentage: partnerData.percentage
-      });
+      await client.query(
+        'INSERT INTO stage_partners (stage_id, partner_id, percentage) VALUES ($1, $2, $3)',
+        [stageId, partnerId, partnerData.percentage]
+      );
       
       // تسجيل مدفوعات الشريك
       if (partnerData.payment > 0) {
-        paymentOperations.create({
-          stage_id: stageId,
-          partner_id: partner.id,
-          amount: partnerData.payment,
-          payment_type: 'from_partner',
-          description: `دفعة من ${partnerData.name}`
-        });
+        await client.query(
+          `INSERT INTO payments (stage_id, partner_id, amount, payment_type, description)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [stageId, partnerId, partnerData.payment, 'from_partner', `دفعة من ${partnerData.name}`]
+        );
+        
+        // تحديث الخزينة
+        await client.query(
+          'UPDATE treasury SET balance = balance + $1, last_updated = CURRENT_TIMESTAMP WHERE stage_id = $2',
+          [partnerData.payment, stageId]
+        );
       }
     }
     
     // 3. إضافة الموردين ومدفوعاتهم
     for (const supplierData of input.suppliers) {
-      const supplier = supplierOperations.getOrCreate(supplierData.name) as any;
+      // الحصول على المورد أو إنشاؤه
+      let supplierResult = await client.query(
+        'SELECT * FROM suppliers WHERE name = $1',
+        [supplierData.name]
+      );
+      
+      let supplierId;
+      if (supplierResult.rows.length === 0) {
+        const insertResult = await client.query(
+          'INSERT INTO suppliers (name) VALUES ($1) RETURNING id',
+          [supplierData.name]
+        );
+        supplierId = insertResult.rows[0].id;
+      } else {
+        supplierId = supplierResult.rows[0].id;
+      }
       
       // تسجيل المدفوعات للمورد
       if (supplierData.payment > 0) {
-        paymentOperations.create({
-          stage_id: stageId,
-          supplier_id: supplier.id,
-          amount: supplierData.payment,
-          payment_type: 'to_supplier',
-          description: `دفعة إلى ${supplierData.name}`
-        });
+        await client.query(
+          `INSERT INTO payments (stage_id, supplier_id, amount, payment_type, description)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [stageId, supplierId, supplierData.payment, 'to_supplier', `دفعة إلى ${supplierData.name}`]
+        );
+        
+        // تحديث الخزينة
+        await client.query(
+          'UPDATE treasury SET balance = balance - $1, last_updated = CURRENT_TIMESTAMP WHERE stage_id = $2',
+          [supplierData.payment, stageId]
+        );
       }
     }
     
     // 4. حساب التسويات التلقائية
-    const balances = calculatePartnerBalances(stageId);
+    const balances = await calculatePartnerBalances(stageId);
     const overpaidPartners = balances.filter(b => b.status === 'overpaid');
     const underpaidPartners = balances.filter(b => b.status === 'underpaid');
     
@@ -333,13 +426,11 @@ export function processUnifiedInput(input: UnifiedInput) {
         if (Math.abs(overpaid.difference) > 0 && Math.abs(underpaid.difference) > 0) {
           const settlementAmount = Math.min(Math.abs(overpaid.difference), Math.abs(underpaid.difference));
           
-          settlementOperations.create({
-            stage_id: stageId,
-            from_partner_id: underpaid.partner_id,
-            to_partner_id: overpaid.partner_id,
-            amount: settlementAmount,
-            description: `تسوية تلقائية`
-          });
+          await client.query(
+            `INSERT INTO settlements (stage_id, from_partner_id, to_partner_id, amount, description)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [stageId, underpaid.partner_id, overpaid.partner_id, settlementAmount, 'تسوية تلقائية']
+          );
           
           // تحديث الأرصدة المتبقية
           overpaid.difference -= settlementAmount;
@@ -348,22 +439,33 @@ export function processUnifiedInput(input: UnifiedInput) {
       }
     }
     
+    await client.query('COMMIT');
+    
+    // الحصول على البيانات النهائية
+    const finalBalances = await calculatePartnerBalances(stageId);
+    const treasury = await treasuryOperations.getByStage(stageId);
+    
     return {
       stageId,
-      balances: calculatePartnerBalances(stageId),
-      treasury: treasuryOperations.getByStage(stageId)
+      balances: finalBalances,
+      treasury
     };
-  })();
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 // الحصول على تقرير شامل للمرحلة
-export function getStageReport(stageId: number) {
-  const stage = stageOperations.getById(stageId);
-  const partners = stagePartnerOperations.getByStage(stageId);
-  const payments = paymentOperations.getByStage(stageId);
-  const settlements = settlementOperations.getByStage(stageId);
-  const treasury = treasuryOperations.getByStage(stageId);
-  const balances = calculatePartnerBalances(stageId);
+export async function getStageReport(stageId: number) {
+  const stage = await stageOperations.getById(stageId);
+  const partners = await stagePartnerOperations.getByStage(stageId);
+  const payments = await paymentOperations.getByStage(stageId);
+  const settlements = await settlementOperations.getByStage(stageId);
+  const treasury = await treasuryOperations.getByStage(stageId);
+  const balances = await calculatePartnerBalances(stageId);
   
   return {
     stage,

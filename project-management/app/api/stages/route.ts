@@ -3,7 +3,7 @@ import { stageOperations } from '@/lib/db-operations';
 
 export async function GET() {
   try {
-    const stages = stageOperations.getAll();
+    const stages = await stageOperations.getAll();
     return NextResponse.json(stages);
   } catch (error: any) {
     return NextResponse.json(
@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const id = stageOperations.create(data);
+    const id = await stageOperations.create(data);
     return NextResponse.json({ id, ...data });
   } catch (error: any) {
     return NextResponse.json(
