@@ -73,6 +73,13 @@ git remote add origin https://github.com/YOUR_USERNAME/project-management.git
 git push -u origin main
 ```
 
+## تهيئة قاعدة البيانات (اختياري):
+
+بعد نشر التطبيق، إذا احتجت لتهيئة الجداول يدوياً، يمكنك زيارة:
+```
+https://[اسم-التطبيق].onrender.com/api/init
+```
+
 ## ملاحظات مهمة:
 
 1. **قاعدة البيانات**: التطبيق مُعد للعمل مع PostgreSQL على Neon
