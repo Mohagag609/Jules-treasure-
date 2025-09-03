@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/database';
+import db from '@/lib/db/postgres';
 
 // GET - جلب مشروع محدد مع تفاصيله
 export async function GET(
@@ -11,7 +11,7 @@ export async function GET(
     const projectId = parseInt(params.id);
     
     // جلب المشروع
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId);
+    const project = await db.getOne('SELECT * FROM projects WHERE id = $1', [projectId]);
     
     if (!project) {
       return NextResponse.json(
@@ -21,14 +21,14 @@ export async function GET(
     }
     
     // جلب المراحل
-    const phases = db.prepare(`
+    const phases = await db.getMany(`
       SELECT * FROM phases 
-      WHERE project_id = ? 
+      WHERE project_id = $1 
       ORDER BY created_at
-    `).all(projectId);
+    `, [projectId]);
     
     // جلب الشركاء
-    const partners = db.prepare(`
+    const partners = await db.getMany(`
       SELECT 
         pp.*,
         p.name as partner_name,
@@ -36,16 +36,16 @@ export async function GET(
         p.email
       FROM project_partners pp
       JOIN partners p ON pp.partner_id = p.id
-      WHERE pp.project_id = ?
-    `).all(projectId);
+      WHERE pp.project_id = $1
+    `, [projectId]);
     
     // جلب سجل الخزينة
-    const treasuryLogs = db.prepare(`
+    const treasuryLogs = await db.getMany(`
       SELECT * FROM treasury_logs 
-      WHERE project_id = ? 
+      WHERE project_id = $1 
       ORDER BY transaction_date DESC
       LIMIT 10
-    `).all(projectId);
+    `, [projectId]);
     
     return NextResponse.json({
       ...project,
@@ -73,20 +73,18 @@ export async function PUT(
     const body = await request.json();
     const { name, start_date, end_date, status } = body;
     
-    const result = db.prepare(`
+    const updatedProject = await db.update(`
       UPDATE projects 
-      SET name = ?, start_date = ?, end_date = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(name, start_date, end_date, status, projectId);
+      SET name = $1, start_date = $2, end_date = $3, status = $4, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $5
+    `, [name, start_date, end_date, status, projectId]);
     
-    if (result.changes === 0) {
+    if (!updatedProject) {
       return NextResponse.json(
         { error: 'Project not found' },
         { status: 404 }
       );
     }
-    
-    const updatedProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId);
     
     return NextResponse.json(updatedProject);
   } catch (error) {
@@ -107,9 +105,9 @@ export async function DELETE(
   try {
     const projectId = parseInt(params.id);
     
-    const result = db.prepare('DELETE FROM projects WHERE id = ?').run(projectId);
+    const deletedCount = await db.remove('DELETE FROM projects WHERE id = $1', [projectId]);
     
-    if (result.changes === 0) {
+    if (deletedCount === 0) {
       return NextResponse.json(
         { error: 'Project not found' },
         { status: 404 }

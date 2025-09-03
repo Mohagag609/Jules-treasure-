@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/database';
+import db from '@/lib/db/postgres';
 
 // GET - جلب جميع الموردين
 export async function GET() {
   try {
-    const suppliers = db.prepare(`
+    const suppliers = await db.getMany(`
       SELECT * FROM suppliers 
       ORDER BY name
-    `).all();
+    `);
     
     return NextResponse.json(suppliers);
   } catch (error) {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
     
     // التحقق من عدم وجود مورد بنفس الاسم
-    const existingSupplier = db.prepare('SELECT id FROM suppliers WHERE name = ?').get(name);
+    const existingSupplier = await db.getOne('SELECT id FROM suppliers WHERE name = $1', [name]);
     if (existingSupplier) {
       return NextResponse.json(
         { error: 'Supplier with this name already exists' },
@@ -41,12 +41,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const result = db.prepare(`
+    const newSupplier = await db.insert(`
       INSERT INTO suppliers (name, phone, email, address)
-      VALUES (?, ?, ?, ?)
-    `).run(name, phone || null, email || null, address || null);
-    
-    const newSupplier = db.prepare('SELECT * FROM suppliers WHERE id = ?').get(result.lastInsertRowid);
+      VALUES ($1, $2, $3, $4)
+    `, [name, phone || null, email || null, address || null]);
     
     return NextResponse.json(newSupplier, { status: 201 });
   } catch (error) {

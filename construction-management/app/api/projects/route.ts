@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/database';
-import { Project } from '@/lib/db/models';
+import db from '@/lib/db/postgres';
 
 // GET - جلب جميع المشاريع
 export async function GET() {
   try {
-    const projects = db.prepare(`
+    const projects = await db.getMany(`
       SELECT * FROM projects 
       ORDER BY created_at DESC
-    `).all();
+    `);
     
     return NextResponse.json(projects);
   } catch (error) {
@@ -33,12 +32,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const result = db.prepare(`
+    const newProject = await db.insert(`
       INSERT INTO projects (name, start_date, end_date, treasury_balance, status)
-      VALUES (?, ?, ?, 0, 'active')
-    `).run(name, start_date, end_date || null);
-    
-    const newProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid);
+      VALUES ($1, $2, $3, 0, 'active')
+    `, [name, start_date, end_date || null]);
     
     return NextResponse.json(newProject, { status: 201 });
   } catch (error) {
