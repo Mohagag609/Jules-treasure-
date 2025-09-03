@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الموردين المتدرج</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #fa709a;
+        }
+        
+        .supplier-tree {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .supplier-node {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .supplier-node:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 20px rgba(250, 112, 154, 0.3);
+        }
+        
+        .supplier-group {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .supplier-regular {
+            background: white;
+            border: 2px solid #fa709a;
+        }
+        
+        .supplier-branches {
+            margin-right: 30px;
+            border-right: 3px solid #fa709a;
+            padding-right: 20px;
+            margin-top: 10px;
+        }
+        
+        .balance {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .balance-positive {
+            color: #dc3545;
+        }
+        
+        .balance-negative {
+            color: #28a745;
+        }
+        
+        .add-supplier-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .add-supplier-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .tree-icon {
+            font-size: 1.2rem;
+            margin-left: 10px;
+        }
+        
+        .expand-btn {
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.3s;
+        }
+        
+        .expand-btn.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .contact-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1><i class="bi bi-truck"></i> نظام الموردين المتدرج</h1>
+            <p class="lead">إدارة الموردين الرئيسيين وفروعهم</p>
+        </div>
+        
+        <!-- أزرار الإجراءات -->
+        <div class="d-flex justify-content-between mb-4">
+            <button class="btn add-supplier-btn" onclick="showAddSupplierModal()">
+                <i class="bi bi-plus-circle"></i> إضافة مورد جديد
+            </button>
+            <button class="btn btn-info" onclick="refreshTree()">
+                <i class="bi bi-arrow-clockwise"></i> تحديث
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.href='/'">
+                <i class="bi bi-house"></i> الرئيسية
+            </button>
+        </div>
+        
+        <!-- عرض الموردين -->
+        <div id="suppliersTree" class="supplier-tree">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ملخص الأرصدة -->
+        <div id="summary" class="summary-card">
+            <h3>الملخص الإجمالي</h3>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <h5>عدد الشركات الرئيسية</h5>
+                    <h2 id="mainSuppliersCount">0</h2>
+                </div>
+                <div class="col-md-3">
+                    <h5>عدد الفروع</h5>
+                    <h2 id="branchesCount">0</h2>
+                </div>
+                <div class="col-md-3">
+                    <h5>إجمالي المستحقات</h5>
+                    <h2 id="totalPayable">0 ج.م</h2>
+                </div>
+                <div class="col-md-3">
+                    <h5>إجمالي المدفوعات</h5>
+                    <h2 id="totalPaid">0 ج.م</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal إضافة مورد -->
+    <div class="modal fade" id="addSupplierModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">إضافة مورد جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSupplierForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم المورد</label>
+                            <input type="text" class="form-control" id="supplierName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="supplierPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العنوان</label>
+                            <textarea class="form-control" id="supplierAddress" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الشركة/المورد الرئيسي (اختياري)</label>
+                            <select class="form-select" id="parentSupplier">
+                                <option value="">-- مورد رئيسي --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isGroup">
+                                <label class="form-check-label" for="isGroup">
+                                    شركة/مجموعة (لها فروع)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-warning" onclick="saveSupplier()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let suppliersData = [];
+        
+        // تحميل البيانات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSuppliersTree();
+        });
+        
+        // تحميل شجرة الموردين
+        async function loadSuppliersTree() {
+            try {
+                const response = await fetch('/api/suppliers/tree');
+                suppliersData = await response.json();
+                renderTree();
+                updateSummary();
+                loadParentSuppliers();
+            } catch (error) {
+                console.error('Error loading suppliers tree:', error);
+            }
+        }
+        
+        // عرض الشجرة
+        function renderTree() {
+            const container = document.getElementById('suppliersTree');
+            container.innerHTML = '';
+            
+            if (suppliersData.length === 0) {
+                container.innerHTML = '<div class="alert alert-info text-center">لا يوجد موردين حتى الآن</div>';
+                return;
+            }
+            
+            suppliersData.forEach(supplier => {
+                container.appendChild(createSupplierNode(supplier, 0));
+            });
+        }
+        
+        // إنشاء عقدة مورد
+        function createSupplierNode(supplier, level) {
+            const node = document.createElement('div');
+            node.className = `supplier-node ${supplier.is_group ? 'supplier-group' : 'supplier-regular'}`;
+            node.style.marginRight = `${level * 30}px`;
+            
+            const hasBranches = supplier.branches && supplier.branches.length > 0;
+            // للموردين: الرصيد الموجب = مستحقات علينا (أحمر)، السالب = مدفوعات زائدة (أخضر)
+            const balanceClass = supplier.balance > 0 ? 'balance-positive' : 'balance-negative';
+            
+            node.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        ${hasBranches ? `<span class="expand-btn" onclick="toggleBranches(this)">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>` : '<span style="width: 20px; display: inline-block;"></span>'}
+                        <i class="bi ${supplier.is_group ? 'bi-building' : 'bi-truck'} tree-icon"></i>
+                        <strong>${supplier.name}</strong>
+                        ${supplier.is_group ? '<span class="badge bg-warning ms-2">مجموعة</span>' : ''}
+                        <div class="contact-info">
+                            ${supplier.phone ? `<i class="bi bi-telephone"></i> ${supplier.phone}` : ''}
+                            ${supplier.address ? `<i class="bi bi-geo-alt"></i> ${supplier.address}` : ''}
+                        </div>
+                    </div>
+                    <div class="balance ${balanceClass}">
+                        ${formatMoney(Math.abs(supplier.balance))}
+                        ${supplier.balance > 0 ? ' (مستحق)' : supplier.balance < 0 ? ' (مدفوع)' : ''}
+                    </div>
+                </div>
+            `;
+            
+            // إضافة الفروع
+            if (hasBranches) {
+                const branchesContainer = document.createElement('div');
+                branchesContainer.className = 'supplier-branches';
+                branchesContainer.style.display = 'block';
+                
+                supplier.branches.forEach(branch => {
+                    branchesContainer.appendChild(createSupplierNode(branch, level + 1));
+                });
+                
+                node.appendChild(branchesContainer);
+            }
+            
+            return node;
+        }
+        
+        // تبديل عرض الفروع
+        function toggleBranches(btn) {
+            const branches = btn.closest('.supplier-node').querySelector('.supplier-branches');
+            if (branches) {
+                if (branches.style.display === 'none') {
+                    branches.style.display = 'block';
+                    btn.classList.remove('collapsed');
+                } else {
+                    branches.style.display = 'none';
+                    btn.classList.add('collapsed');
+                }
+            }
+        }
+        
+        // تحديث الملخص
+        function updateSummary() {
+            let mainCount = 0;
+            let branchesCount = 0;
+            let totalPayable = 0;
+            let totalPaid = 0;
+            
+            function countSuppliers(suppliers) {
+                suppliers.forEach(supplier => {
+                    if (supplier.level === 0 && supplier.is_group) {
+                        mainCount++;
+                    } else if (supplier.level > 0) {
+                        branchesCount++;
+                    }
+                    
+                    if (supplier.balance > 0) {
+                        totalPayable += supplier.balance;
+                    } else {
+                        totalPaid += Math.abs(supplier.balance);
+                    }
+                    
+                    if (supplier.branches) {
+                        countSuppliers(supplier.branches);
+                    }
+                });
+            }
+            
+            countSuppliers(suppliersData);
+            
+            document.getElementById('mainSuppliersCount').textContent = mainCount;
+            document.getElementById('branchesCount').textContent = branchesCount;
+            document.getElementById('totalPayable').textContent = formatMoney(totalPayable);
+            document.getElementById('totalPaid').textContent = formatMoney(totalPaid);
+        }
+        
+        // تحميل الموردين الرئيسيين للقائمة المنسدلة
+        function loadParentSuppliers() {
+            const select = document.getElementById('parentSupplier');
+            select.innerHTML = '<option value="">-- مورد رئيسي --</option>';
+            
+            function addToSelect(suppliers, prefix = '') {
+                suppliers.forEach(supplier => {
+                    if (supplier.is_group) {
+                        const option = document.createElement('option');
+                        option.value = supplier.id;
+                        option.textContent = prefix + supplier.name + ' (مجموعة)';
+                        select.appendChild(option);
+                        
+                        if (supplier.branches) {
+                            addToSelect(supplier.branches, prefix + '  └─ ');
+                        }
+                    }
+                });
+            }
+            
+            addToSelect(suppliersData);
+        }
+        
+        // حفظ مورد جديد
+        async function saveSupplier() {
+            const name = document.getElementById('supplierName').value;
+            const phone = document.getElementById('supplierPhone').value;
+            const address = document.getElementById('supplierAddress').value;
+            const parentId = document.getElementById('parentSupplier').value;
+            const isGroup = document.getElementById('isGroup').checked;
+            
+            if (!name) {
+                alert('يرجى إدخال اسم المورد');
+                return;
+            }
+            
+            const data = {
+                name: name,
+                phone: phone,
+                address: address,
+                parent_supplier_id: parentId ? parseInt(parentId) : null,
+                is_group: isGroup
+            };
+            
+            try {
+                const response = await fetch('/api/suppliers', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addSupplierModal')).hide();
+                    document.getElementById('addSupplierForm').reset();
+                    loadSuppliersTree();
+                    showMessage('تم إضافة المورد بنجاح', 'success');
+                } else {
+                    const error = await response.json();
+                    showMessage(error.message || 'حدث خطأ', 'danger');
+                }
+            } catch (error) {
+                showMessage('خطأ في الاتصال', 'danger');
+            }
+        }
+        
+        // عرض نافذة إضافة مورد
+        function showAddSupplierModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+            modal.show();
+        }
+        
+        // تحديث الشجرة
+        function refreshTree() {
+            loadSuppliersTree();
+            showMessage('تم التحديث', 'info');
+        }
+        
+        // عرض رسالة
+        function showMessage(text, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+            alert.style.zIndex = '9999';
+            alert.textContent = text;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+        
+        // تنسيق المال
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP'
+            }).format(amount || 0);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الخزينة الذكي</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+            --sidebar-width: 260px;
+            --sidebar-collapsed: 80px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-logo i {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 0.75rem;
+        }
+        
+        .sidebar-logo span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar.collapsed .sidebar-logo span {
+            opacity: 0;
+            width: 0;
+        }
+        
+        .sidebar-menu {
+            padding: 1rem 0;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+        
+        .menu-item {
+            position: relative;
+            margin: 0.25rem 0.75rem;
+        }
+        
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 0.75rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1));
+            transition: width 0.3s;
+        }
+        
+        .menu-link:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #fff;
+            transform: translateX(-5px);
+        }
+        
+        .menu-link:hover::before {
+            width: 100%;
+        }
+        
+        .menu-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .menu-icon {
+            font-size: 1.25rem;
+            width: 2rem;
+            text-align: center;
+            margin-left: 0.75rem;
+        }
+        
+        .menu-text {
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar.collapsed .menu-text {
+            opacity: 0;
+            width: 0;
+        }
+        
+        .menu-badge {
+            margin-right: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
+        }
+        
+        .sidebar.collapsed .menu-badge {
+            display: none;
+        }
+        
+        /* Main Content */
+        .main-wrapper {
+            margin-right: var(--sidebar-width);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+        }
+        
+        .main-wrapper.expanded {
+            margin-right: var(--sidebar-collapsed);
+        }
+        
+        /* Top Bar */
+        .topbar {
+            background: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .menu-toggle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .menu-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+        
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .topbar-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .topbar-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.625rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 1rem;
+        }
+        
+        /* Content Area */
+        .content {
+            padding: 1.5rem;
+        }
+        
+        .page-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Cards */
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-icon.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stat-icon.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .stat-icon.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .stat-icon.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        .stat-change {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+        }
+        
+        .stat-change.up {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .stat-change.down {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        /* Modern Table */
+        .modern-table {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .table-header {
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .table {
+            margin: 0;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .table td {
+            padding: 1rem;
+            color: #475569;
+            border: none;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        /* Tree View */
+        .tree-item {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .tree-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(-5px);
+        }
+        
+        .tree-item.parent {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-right: 4px solid #0ea5e9;
+        }
+        
+        .tree-children {
+            margin-right: 2rem;
+            margin-top: 0.75rem;
+            padding-right: 1rem;
+            border-right: 2px dashed #cbd5e1;
+        }
+        
+        /* Buttons */
+        .btn-modern {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-success-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: var(--sidebar-collapsed);
+            }
+            
+            .main-wrapper {
+                margin-right: var(--sidebar-collapsed);
+            }
+            
+            .sidebar-logo span,
+            .menu-text,
+            .menu-badge {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="sidebar-logo">
+                <i class="fas fa-wallet"></i>
+                <span>نظام الخزينة</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="menu-item">
+                <a href="#" class="menu-link active" data-page="dashboard">
+                    <i class="fas fa-home menu-icon"></i>
+                    <span class="menu-text">الرئيسية</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="safes">
+                    <i class="fas fa-vault menu-icon"></i>
+                    <span class="menu-text">الخزائن</span>
+                    <span class="menu-badge">3</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="customers">
+                    <i class="fas fa-users menu-icon"></i>
+                    <span class="menu-text">العملاء</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="suppliers">
+                    <i class="fas fa-truck menu-icon"></i>
+                    <span class="menu-text">الموردين</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="/projects" class="menu-link">
+                    <i class="fas fa-project-diagram menu-icon"></i>
+                    <span class="menu-text">المشاريع</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="vouchers">
+                    <i class="fas fa-file-invoice menu-icon"></i>
+                    <span class="menu-text">السندات</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="reports">
+                    <i class="fas fa-chart-bar menu-icon"></i>
+                    <span class="menu-text">التقارير</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="settings">
+                    <i class="fas fa-cog menu-icon"></i>
+                    <span class="menu-text">الإعدادات</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-wrapper" id="mainWrapper">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
+            </div>
+            
+            <div class="topbar-right">
+                <div class="topbar-item">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="topbar-item">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">5</span>
+                </div>
+                <div class="topbar-item">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Dashboard Page -->
+            <div class="page-content active" id="dashboard-page">
+                <!-- Stats Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change up">+12%</span>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="stat-value" id="totalBalance">0</div>
+                            <div class="stat-label">إجمالي الرصيد</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change up">+8%</span>
+                            <div class="stat-icon success">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-value" id="totalCustomers">0</div>
+                            <div class="stat-label">العملاء</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change down">-3%</span>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="stat-value" id="totalSuppliers">0</div>
+                            <div class="stat-label">الموردين</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change up">+25%</span>
+                            <div class="stat-icon danger">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-value" id="totalVouchers">0</div>
+                            <div class="stat-label">السندات</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="row g-3">
+                    <div class="col-lg-8">
+                        <div class="modern-table">
+                            <div class="table-header">
+                                <h3 class="table-title">آخر المعاملات</h3>
+                                <button class="btn btn-sm btn-primary-gradient">
+                                    <i class="fas fa-plus"></i> إضافة
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>الرقم</th>
+                                            <th>النوع</th>
+                                            <th>المبلغ</th>
+                                            <th>التاريخ</th>
+                                            <th>الحالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactions">
+                                        <tr>
+                                            <td colspan="5" class="text-center">جاري التحميل...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="stat-card">
+                            <h5 class="mb-3">توزيع الأرصدة</h5>
+                            <canvas id="balanceChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Safes Page -->
+            <div class="page-content" id="safes-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>الخزائن المتدرجة</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addSafe()">
+                        <i class="fas fa-plus"></i> إضافة خزينة
+                    </button>
+                </div>
+                
+                <div id="safesTree" class="tree-container">
+                    <!-- Tree items will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Customers Page -->
+            <div class="page-content" id="customers-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>العملاء</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addCustomer()">
+                        <i class="fas fa-plus"></i> إضافة عميل
+                    </button>
+                </div>
+                
+                <div id="customersTree" class="tree-container">
+                    <!-- Tree items will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Suppliers Page -->
+            <div class="page-content" id="suppliers-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>الموردين</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addSupplier()">
+                        <i class="fas fa-plus"></i> إضافة مورد
+                    </button>
+                </div>
+                
+                <div id="suppliersTree" class="tree-container">
+                    <!-- Tree items will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Projects Page -->
+            <div class="page-content" id="projects-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>المشاريع المتكاملة</h2>
+                    <div>
+                        <button class="btn btn-danger me-2" onclick="showQuickProjectEntry()">
+                            <i class="fas fa-bolt"></i> إدخال سريع
+                        </button>
+                        <button class="btn btn-modern btn-primary-gradient" onclick="addProject()">
+                            <i class="fas fa-plus"></i> مشروع جديد
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-primary">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="totalProjects">0</h3>
+                                <p>المشاريع النشطة</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-success">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="totalPartners">0</h3>
+                                <p>الشركاء</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-warning">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="projectInvestment">0</h3>
+                                <p>إجمالي الاستثمار</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-danger">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="projectProfit">0</h3>
+                                <p>الأرباح المحققة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="projectsList"></div>
+            </div>
+            
+            <!-- Vouchers Page -->
+            <div class="page-content" id="vouchers-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>السندات</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addVoucher()">
+                        <i class="fas fa-plus"></i> إضافة سند
+                    </button>
+                </div>
+                
+                <div class="modern-table">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>رقم السند</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>التاريخ</th>
+                                    <th>الوصف</th>
+                                    <th>الطرف</th>
+                                <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vouchersTable">
+                                <!-- Vouchers will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reports Page -->
+            <div class="page-content" id="reports-page">
+                <h2 class="mb-4">التقارير</h2>
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                            <h5>تقرير الخزائن</h5>
+                            <button class="btn btn-modern btn-primary-gradient mt-3">
+                                تصدير PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
+                            <h5>كشف الحساب</h5>
+                            <button class="btn btn-modern btn-success-gradient mt-3">
+                                تصدير Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                            <h5>الأرباح والخسائر</h5>
+                            <button class="btn btn-modern btn-primary-gradient mt-3">
+                                عرض التقرير
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Page -->
+            <div class="page-content" id="settings-page">
+                <h2 class="mb-4">الإعدادات</h2>
+                
+                <div class="stat-card">
+                    <form>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">اسم الشركة</label>
+                                <input type="text" class="form-control" value="نظام الخزينة الذكي">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">العملة</label>
+                                <select class="form-select">
+                                    <option>جنيه مصري (EGP)</option>
+                                    <option>دولار أمريكي (USD)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-modern btn-primary-gradient">
+                                    <i class="fas fa-save"></i> حفظ الإعدادات
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Quick Entry Button -->
+    <style>
+        .quick-entry-fab {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        
+        .quick-entry-fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+    </style>
+    
+    <button class="quick-entry-fab" onclick="showQuickVoucherModal()" title="إدخال سريع">
+        <i class="fas fa-bolt"></i>
+    </button>
+    
+    <!-- Modals -->
+    <!-- Safe Modal -->
+    <div class="modal fade" id="safeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="safeModalTitle">إضافة خزينة</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="safeForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم الخزينة</label>
+                            <input type="text" class="form-control" id="safeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الخزينة الأم (اختياري)</label>
+                            <select class="form-select" id="parentSafe">
+                                <option value="">-- خزينة رئيسية --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isContainer">
+                                <label class="form-check-label" for="isContainer">
+                                    خزينة حاوية (لا تقبل معاملات مباشرة)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSafe()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Modal -->
+    <div class="modal fade" id="customerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="customerModalTitle">إضافة عميل</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="customerForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم العميل</label>
+                            <input type="text" class="form-control" id="customerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="customerPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العنوان</label>
+                            <textarea class="form-control" id="customerAddress" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الشركة/العميل الرئيسي (اختياري)</label>
+                            <select class="form-select" id="parentCustomer">
+                                <option value="">-- عميل رئيسي --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isCustomerGroup">
+                                <label class="form-check-label" for="isCustomerGroup">
+                                    شركة/مجموعة (لها فروع)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" onclick="saveCustomer()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Supplier Modal -->
+    <div class="modal fade" id="supplierModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="supplierModalTitle">إضافة مورد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="supplierForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم المورد</label>
+                            <input type="text" class="form-control" id="supplierName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="supplierPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العنوان</label>
+                            <textarea class="form-control" id="supplierAddress" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الشركة/المورد الرئيسي (اختياري)</label>
+                            <select class="form-select" id="parentSupplier">
+                                <option value="">-- مورد رئيسي --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isSupplierGroup">
+                                <label class="form-check-label" for="isSupplierGroup">
+                                    شركة/مجموعة (لها فروع)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-warning" onclick="saveSupplier()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Voucher Modal -->
+    <div class="modal fade" id="quickVoucherModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-bolt"></i> إدخال سريع للسندات
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quickVoucherForm">
+                        <div class="mb-3">
+                            <label class="form-label">نوع السند</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="quickType" id="quickReceipt" value="receipt" checked>
+                                <label class="btn btn-outline-success" for="quickReceipt">
+                                    <i class="fas fa-arrow-down"></i> قبض
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="quickType" id="quickPayment" value="payment">
+                                <label class="btn btn-outline-danger" for="quickPayment">
+                                    <i class="fas fa-arrow-up"></i> صرف
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">المبلغ</label>
+                                    <input type="number" class="form-control form-control-lg" id="quickVoucherAmount" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">الخزينة</label>
+                                    <select class="form-select" id="quickVoucherSafe" required>
+                                        <option value="">اختر...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">الطرف</label>
+                            <select class="form-select" id="quickVoucherEntity">
+                                <option value="">اختر...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">الوصف (اختياري)</label>
+                            <input type="text" class="form-control" id="quickVoucherDescription" placeholder="وصف مختصر...">
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="linkToProject">
+                            <label class="form-check-label" for="linkToProject">
+                                ربط بمشروع
+                            </label>
+                        </div>
+                        
+                        <div id="projectSection" style="display:none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">المشروع</label>
+                                        <select class="form-select" id="quickVoucherProject">
+                                            <option value="">اختر...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">المرحلة</label>
+                                        <select class="form-select" id="quickVoucherPhase">
+                                            <option value="">اختر...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-danger" onclick="saveQuickVoucher()">
+                        <i class="fas fa-save"></i> حفظ السند
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Voucher Modal -->
+    <div class="modal fade" id="voucherModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="voucherModalTitle">إضافة سند</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="voucherForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">نوع السند</label>
+                                    <select class="form-select" id="voucherType" onchange="updateVoucherForm()">
+                                        <option value="receipt">سند قبض</option>
+                                        <option value="payment">سند صرف</option>
+                                        <option value="transfer">تحويل بين خزائن</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">المبلغ</label>
+                                    <input type="number" class="form-control" id="voucherAmount" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">الخزينة</label>
+                                    <select class="form-select" id="voucherSafe" required>
+                                        <option value="">اختر الخزينة</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="entitySection">
+                                <div class="mb-3">
+                                    <label class="form-label" id="entityLabel">العميل</label>
+                                    <select class="form-select" id="voucherEntity">
+                                        <option value="">اختر</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الوصف</label>
+                            <textarea class="form-control" id="voucherDescription" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-info text-white" onclick="saveVoucher()">حفظ السند</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/app-optimized.js"></script>
+</body>
+</html>

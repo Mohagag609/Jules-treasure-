@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الخزائن المتدرج</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #667eea;
+        }
+        
+        .safe-tree {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .safe-node {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .safe-node:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .safe-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .safe-regular {
+            background: white;
+            border: 2px solid #667eea;
+        }
+        
+        .safe-children {
+            margin-right: 30px;
+            border-right: 3px solid #667eea;
+            padding-right: 20px;
+            margin-top: 10px;
+        }
+        
+        .balance {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .balance-positive {
+            color: #28a745;
+        }
+        
+        .balance-negative {
+            color: #dc3545;
+        }
+        
+        .add-safe-btn {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .add-safe-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(67, 233, 123, 0.4);
+        }
+        
+        .tree-line {
+            width: 30px;
+            height: 2px;
+            background: #667eea;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 10px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .tree-icon {
+            font-size: 1.2rem;
+            margin-left: 10px;
+        }
+        
+        .expand-btn {
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.3s;
+        }
+        
+        .expand-btn.collapsed {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1><i class="bi bi-diagram-3"></i> نظام الخزائن المتدرج</h1>
+            <p class="lead">إدارة الخزائن الرئيسية والفرعية</p>
+        </div>
+        
+        <!-- أزرار الإجراءات -->
+        <div class="d-flex justify-content-between mb-4">
+            <button class="btn add-safe-btn" onclick="showAddSafeModal()">
+                <i class="bi bi-plus-circle"></i> إضافة خزينة جديدة
+            </button>
+            <button class="btn btn-info" onclick="refreshTree()">
+                <i class="bi bi-arrow-clockwise"></i> تحديث
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.href='/'">
+                <i class="bi bi-house"></i> الرئيسية
+            </button>
+        </div>
+        
+        <!-- عرض الخزائن -->
+        <div id="safesTree" class="safe-tree">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ملخص الأرصدة -->
+        <div id="summary" class="summary-card">
+            <h3>الملخص الإجمالي</h3>
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <h5>عدد الخزائن الرئيسية</h5>
+                    <h2 id="mainSafesCount">0</h2>
+                </div>
+                <div class="col-md-4">
+                    <h5>عدد الخزائن الفرعية</h5>
+                    <h2 id="subSafesCount">0</h2>
+                </div>
+                <div class="col-md-4">
+                    <h5>الإجمالي الكلي</h5>
+                    <h2 id="totalBalance">0 ج.م</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal إضافة خزينة -->
+    <div class="modal fade" id="addSafeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">إضافة خزينة جديدة</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSafeForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم الخزينة</label>
+                            <input type="text" class="form-control" id="safeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الخزينة الأم (اختياري)</label>
+                            <select class="form-select" id="parentSafe">
+                                <option value="">-- خزينة رئيسية --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isContainer">
+                                <label class="form-check-label" for="isContainer">
+                                    خزينة حاوية (لا تقبل معاملات مباشرة)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">النوع</label>
+                            <select class="form-select" id="safeType">
+                                <option value="main">رئيسية</option>
+                                <option value="branch">فرعية</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSafe()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let safesData = [];
+        
+        // تحميل البيانات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSafesTree();
+        });
+        
+        // تحميل شجرة الخزائن
+        async function loadSafesTree() {
+            try {
+                const response = await fetch('/api/safes/tree');
+                safesData = await response.json();
+                renderTree();
+                updateSummary();
+                loadParentSafes();
+            } catch (error) {
+                console.error('Error loading safes tree:', error);
+            }
+        }
+        
+        // عرض الشجرة
+        function renderTree() {
+            const container = document.getElementById('safesTree');
+            container.innerHTML = '';
+            
+            if (safesData.length === 0) {
+                container.innerHTML = '<div class="alert alert-info text-center">لا توجد خزائن حتى الآن</div>';
+                return;
+            }
+            
+            safesData.forEach(safe => {
+                container.appendChild(createSafeNode(safe, 0));
+            });
+        }
+        
+        // إنشاء عقدة خزينة
+        function createSafeNode(safe, level) {
+            const node = document.createElement('div');
+            node.className = `safe-node ${safe.is_container ? 'safe-container' : 'safe-regular'}`;
+            node.style.marginRight = `${level * 30}px`;
+            
+            const hasChildren = safe.children && safe.children.length > 0;
+            const balanceClass = safe.balance >= 0 ? 'balance-positive' : 'balance-negative';
+            
+            node.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        ${hasChildren ? `<span class="expand-btn" onclick="toggleChildren(this)">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>` : '<span style="width: 20px; display: inline-block;"></span>'}
+                        <i class="bi ${safe.is_container ? 'bi-folder' : 'bi-safe2'} tree-icon"></i>
+                        <strong>${safe.name}</strong>
+                        ${safe.is_container ? '<span class="badge bg-warning ms-2">حاوية</span>' : ''}
+                    </div>
+                    <div class="balance ${balanceClass}">
+                        ${formatMoney(safe.balance)}
+                    </div>
+                </div>
+            `;
+            
+            // إضافة الخزائن الفرعية
+            if (hasChildren) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'safe-children';
+                childrenContainer.style.display = 'block';
+                
+                safe.children.forEach(child => {
+                    childrenContainer.appendChild(createSafeNode(child, level + 1));
+                });
+                
+                node.appendChild(childrenContainer);
+            }
+            
+            return node;
+        }
+        
+        // تبديل عرض الفرعيات
+        function toggleChildren(btn) {
+            const children = btn.closest('.safe-node').querySelector('.safe-children');
+            if (children) {
+                if (children.style.display === 'none') {
+                    children.style.display = 'block';
+                    btn.classList.remove('collapsed');
+                } else {
+                    children.style.display = 'none';
+                    btn.classList.add('collapsed');
+                }
+            }
+        }
+        
+        // تحديث الملخص
+        function updateSummary() {
+            let mainCount = 0;
+            let subCount = 0;
+            let totalBalance = 0;
+            
+            function countSafes(safes) {
+                safes.forEach(safe => {
+                    if (safe.level === 0) {
+                        mainCount++;
+                    } else {
+                        subCount++;
+                    }
+                    totalBalance += safe.balance;
+                    
+                    if (safe.children) {
+                        countSafes(safe.children);
+                    }
+                });
+            }
+            
+            countSafes(safesData);
+            
+            document.getElementById('mainSafesCount').textContent = mainCount;
+            document.getElementById('subSafesCount').textContent = subCount;
+            document.getElementById('totalBalance').textContent = formatMoney(totalBalance);
+        }
+        
+        // تحميل الخزائن الأم للقائمة المنسدلة
+        function loadParentSafes() {
+            const select = document.getElementById('parentSafe');
+            select.innerHTML = '<option value="">-- خزينة رئيسية --</option>';
+            
+            function addToSelect(safes, prefix = '') {
+                safes.forEach(safe => {
+                    const option = document.createElement('option');
+                    option.value = safe.id;
+                    option.textContent = prefix + safe.name;
+                    if (safe.is_container) {
+                        option.textContent += ' (حاوية)';
+                    }
+                    select.appendChild(option);
+                    
+                    if (safe.children) {
+                        addToSelect(safe.children, prefix + '  └─ ');
+                    }
+                });
+            }
+            
+            addToSelect(safesData);
+        }
+        
+        // حفظ خزينة جديدة
+        async function saveSafe() {
+            const name = document.getElementById('safeName').value;
+            const parentId = document.getElementById('parentSafe').value;
+            const isContainer = document.getElementById('isContainer').checked;
+            const type = document.getElementById('safeType').value;
+            
+            if (!name) {
+                alert('يرجى إدخال اسم الخزينة');
+                return;
+            }
+            
+            const data = {
+                name: name,
+                parent_safe_id: parentId ? parseInt(parentId) : null,
+                is_container: isContainer,
+                type: parentId ? 'sub-branch' : type,
+                is_main: !parentId && type === 'main'
+            };
+            
+            try {
+                const response = await fetch('/api/safes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addSafeModal')).hide();
+                    document.getElementById('addSafeForm').reset();
+                    loadSafesTree();
+                    showMessage('تم إضافة الخزينة بنجاح', 'success');
+                } else {
+                    const error = await response.json();
+                    showMessage(error.message || 'حدث خطأ', 'danger');
+                }
+            } catch (error) {
+                showMessage('خطأ في الاتصال', 'danger');
+            }
+        }
+        
+        // عرض نافذة إضافة خزينة
+        function showAddSafeModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addSafeModal'));
+            modal.show();
+        }
+        
+        // تحديث الشجرة
+        function refreshTree() {
+            loadSafesTree();
+            showMessage('تم التحديث', 'info');
+        }
+        
+        // عرض رسالة
+        function showMessage(text, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+            alert.style.zIndex = '9999';
+            alert.textContent = text;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+        
+        // تنسيق المال
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP'
+            }).format(amount || 0);
+        }
+    </script>
+</body>
+</html>
