@@ -35,6 +35,12 @@ const menuItems = [
     color: '#A855F7'
   },
   {
+    title: 'العمارات',
+    icon: Building2,
+    href: '/buildings',
+    color: '#8B5CF6'
+  },
+  {
     title: 'الإدخال السريع',
     icon: PlusCircle,
     href: '/quick-entry',
