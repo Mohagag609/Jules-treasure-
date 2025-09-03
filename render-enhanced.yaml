@@ -5,15 +5,16 @@ services:
     runtime: node
     region: oregon # يمكنك تغييرها حسب موقعك
     plan: free # أو starter للأداء الأفضل
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: ./scripts/render-build.sh
+    startCommand: ./scripts/render-start.sh
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: NEXTAUTH_URL
-        sync: false # سيتم تعيينها بعد النشر
+        sync: false # سيتم تعيينها بعد النشر مع URL الفعلي
       - key: NEXTAUTH_SECRET
         generateValue: true # Render سيولد قيمة عشوائية آمنة
       - key: DATABASE_URL
@@ -29,3 +30,4 @@ databases:
     user: construction_admin
     region: oregon # نفس المنطقة مع التطبيق
     postgresMajorVersion: 14
+    ipAllowList: [] # السماح بالاتصالات من خدمة Render فقط
