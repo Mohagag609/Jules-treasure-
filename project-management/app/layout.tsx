@@ -14,17 +14,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body>
+      <body className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
         <div className="flex min-h-screen">
           <Sidebar />
-          <main className="main-content flex-1 animate-fadeIn">
+          <main className="flex-1 mr-0 md:mr-72 p-6 animate-fadeIn">
             {children}
           </main>
         </div>
         
         {/* Floating Action Button */}
-        <div className="fab group">
-          <PlusIcon />
+        <div className="fixed bottom-8 left-8 w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform duration-300 cursor-pointer z-50 group">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
           <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block">
             <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap">
               إضافة سريعة
@@ -33,13 +35,5 @@ export default function RootLayout({
         </div>
       </body>
     </html>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-    </svg>
   );
 }

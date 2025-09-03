@@ -105,9 +105,9 @@ export default function Sidebar() {
       </button>
 
       {/* Sidebar */}
-      <aside className={`sidebar ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} transition-transform duration-300`}>
+      <aside className={`fixed right-0 top-0 z-40 h-screen w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white overflow-y-auto shadow-2xl transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
         {/* Logo Section */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b border-white/10 bg-black/20">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-600 rounded-xl flex items-center justify-center shadow-xl">
               <Building2 className="w-8 h-8 text-white" />
@@ -131,7 +131,11 @@ export default function Sidebar() {
                   <Link
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className={`sidebar-item group ${isActive ? 'active' : ''}`}
+                    className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-xl transition-all duration-300 font-bold group
+                      ${isActive 
+                        ? 'bg-gradient-to-l from-blue-500 to-purple-600 shadow-lg shadow-blue-500/30' 
+                        : 'hover:bg-white/20 hover:translate-x-[-5px]'
+                      }`}
                   >
                     <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
                       <Icon className="w-5 h-5 text-white" />
@@ -153,7 +157,7 @@ export default function Sidebar() {
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/20">
             <div className="text-xs text-gray-400 mb-2">تم التطوير بواسطة</div>
             <div className="text-sm font-bold text-white">فريق التطوير المتقدم</div>
             <div className="mt-3 flex justify-center gap-2">

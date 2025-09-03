@@ -19,7 +19,7 @@ import {
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     totalStages: 8,
     totalPartners: 12,
     totalSuppliers: 15,
@@ -29,8 +29,6 @@ export default function DashboardPage() {
     monthlyGrowth: 22,
     completionRate: 78
   });
-
-  const [loading, setLoading] = useState(false);
 
   // Data for charts
   const pieData = [
@@ -55,7 +53,9 @@ export default function DashboardPage() {
       icon: Layers,
       change: '+12%',
       isPositive: true,
-      gradient: 'from-blue-500 to-cyan-500'
+      gradient: 'from-blue-500 to-cyan-500',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-500'
     },
     {
       title: 'عدد الشركاء',
@@ -63,7 +63,9 @@ export default function DashboardPage() {
       icon: Users,
       change: '+5%',
       isPositive: true,
-      gradient: 'from-purple-500 to-pink-500'
+      gradient: 'from-purple-500 to-pink-500',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-500'
     },
     {
       title: 'عدد الموردين',
@@ -71,7 +73,9 @@ export default function DashboardPage() {
       icon: Users,
       change: '+8%',
       isPositive: true,
-      gradient: 'from-orange-500 to-red-500'
+      gradient: 'from-orange-500 to-red-500',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-500'
     },
     {
       title: 'إجمالي المدفوعات',
@@ -80,7 +84,9 @@ export default function DashboardPage() {
       icon: DollarSign,
       change: '+18%',
       isPositive: true,
-      gradient: 'from-green-500 to-emerald-500'
+      gradient: 'from-green-500 to-emerald-500',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-500'
     },
     {
       title: 'رصيد الخزينة',
@@ -89,7 +95,9 @@ export default function DashboardPage() {
       icon: Wallet,
       change: '+22%',
       isPositive: true,
-      gradient: 'from-cyan-500 to-blue-500'
+      gradient: 'from-cyan-500 to-blue-500',
+      bgColor: 'bg-cyan-50',
+      borderColor: 'border-cyan-500'
     },
     {
       title: 'التسويات المعلقة',
@@ -97,7 +105,9 @@ export default function DashboardPage() {
       icon: AlertCircle,
       change: '-3',
       isPositive: false,
-      gradient: 'from-red-500 to-pink-500'
+      gradient: 'from-red-500 to-pink-500',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-500'
     }
   ];
 
@@ -111,22 +121,22 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="card">
+      <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-4xl font-black bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               لوحة التحكم
             </h1>
-            <p className="text-gray-600 mt-2">مرحباً بك في النظام المتقدم لإدارة المشاريع</p>
+            <p className="text-gray-600 mt-2 font-semibold">مرحباً بك في النظام المتقدم لإدارة المشاريع</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-left">
-              <p className="text-sm text-gray-500">آخر تحديث</p>
+              <p className="text-sm text-gray-500 font-semibold">آخر تحديث</p>
               <p className="text-lg font-bold">{new Date().toLocaleString('ar-EG')}</p>
             </div>
-            <button className="btn-primary">
-              <Eye className="w-5 h-5 ml-2" />
-              عرض التقرير الكامل
+            <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              عرض التقرير
             </button>
           </div>
         </div>
@@ -137,7 +147,7 @@ export default function DashboardPage() {
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <div key={index} className="stat-card stat-card-blue group hover:scale-105">
+            <div key={index} className={`${card.bgColor} backdrop-blur-lg rounded-2xl p-6 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-t-4 ${card.borderColor} group`}>
               <div className="flex justify-between items-start mb-4">
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
                   <Icon className="w-6 h-6 text-white" />
@@ -147,7 +157,7 @@ export default function DashboardPage() {
                   {card.change}
                 </div>
               </div>
-              <h3 className="text-gray-600 text-sm font-semibold mb-1">{card.title}</h3>
+              <h3 className="text-gray-700 text-sm font-bold mb-1">{card.title}</h3>
               <p className="text-3xl font-black text-gray-900">
                 {card.value}
                 {card.unit && <span className="text-lg text-gray-600 mr-1">{card.unit}</span>}
@@ -160,7 +170,7 @@ export default function DashboardPage() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pie Chart */}
-        <div className="card">
+        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               <Activity className="w-5 h-5 text-white" />
@@ -189,7 +199,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Area Chart */}
-        <div className="card lg:col-span-2">
+        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50 lg:col-span-2">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-white" />
@@ -229,41 +239,41 @@ export default function DashboardPage() {
       {/* Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Progress Stats */}
-        <div className="card">
+        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
           <h3 className="text-xl font-bold mb-6">مؤشرات الأداء</h3>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold">معدل الإنجاز</span>
+                <span className="text-sm font-bold text-gray-700">معدل الإنجاز</span>
                 <span className="text-sm font-bold text-blue-600">78%</span>
               </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '78%' }}></div>
+              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500" style={{ width: '78%' }}></div>
               </div>
             </div>
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold">استخدام الميزانية</span>
+                <span className="text-sm font-bold text-gray-700">استخدام الميزانية</span>
                 <span className="text-sm font-bold text-green-600">65%</span>
               </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '65%', background: 'linear-gradient(to right, #10b981, #059669)' }}></div>
+              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-500" style={{ width: '65%' }}></div>
               </div>
             </div>
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold">رضا العملاء</span>
+                <span className="text-sm font-bold text-gray-700">رضا العملاء</span>
                 <span className="text-sm font-bold text-purple-600">92%</span>
               </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '92%', background: 'linear-gradient(to right, #a855f7, #7c3aed)' }}></div>
+              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-purple-500 to-pink-600 rounded-full transition-all duration-500" style={{ width: '92%' }}></div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Recent Activities */}
-        <div className="card">
+        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <Activity className="w-5 h-5 text-purple-600" />
             النشاطات الأخيرة
@@ -283,11 +293,11 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <p className="text-sm font-bold text-gray-900">{activity.message}</p>
                   {activity.amount && (
-                    <p className="text-sm font-semibold text-gray-600 mt-1">
+                    <p className="text-sm font-bold text-gray-600 mt-1">
                       {activity.amount.toLocaleString('ar-EG')} جنيه
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  <p className="text-xs text-gray-500 mt-1 font-semibold">{activity.time}</p>
                 </div>
               </div>
             ))}
