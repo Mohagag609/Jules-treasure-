@@ -30,16 +30,24 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeApp() {
     showGlobalLoader();
     
-    // تحميل البيانات بشكل متوازي لتسريع التحميل
-    await Promise.all([
-        loadCustomers(),
-        loadSuppliers(),
-        loadSafes(),
-        loadCategories(),
-        loadVouchers()
-    ]);
-    
-    hideGlobalLoader();
+    try {
+        // تحميل البيانات بشكل متوازي لتسريع التحميل
+        await Promise.all([
+            loadCustomers(),
+            loadSuppliers(),
+            loadSafes(),
+            loadCategories(),
+            loadVouchers()
+        ]).catch(error => {
+            console.error('Error loading initial data:', error);
+            // نستمر حتى لو فشل جزء من التحميل
+        });
+    } catch (error) {
+        console.error('Initialization error:', error);
+    } finally {
+        // إخفاء رسالة التحميل في كل الأحوال
+        hideGlobalLoader();
+    }
     
     // تحديث البيانات كل 30 ثانية
     setInterval(loadDashboard, 30000);
@@ -61,6 +69,11 @@ function showGlobalLoader() {
             </div>
         `;
         document.body.appendChild(loader);
+        
+        // إخفاء تلقائي بعد 5 ثواني في حالة حدوث مشكلة
+        setTimeout(() => {
+            hideGlobalLoader();
+        }, 5000);
     }
 }
 
@@ -513,6 +526,8 @@ async function loadCustomers(showLoader = true) {
     
     try {
         const response = await fetch('/api/customers');
+        if (!response.ok) throw new Error('Failed to fetch');
+        
         customers = await response.json();
         
         // حفظ في Cache
@@ -524,7 +539,12 @@ async function loadCustomers(showLoader = true) {
         renderCustomersTable();
     } catch (error) {
         console.error('Error loading customers:', error);
-        Swal.fire('خطأ', 'فشل تحميل العملاء', 'error');
+        // عرض جدول فارغ بدلاً من رسالة الخطأ
+        const tbody = document.getElementById('customersTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">لا توجد بيانات</td></tr>';
+        }
+        customers = []; // تفريغ القائمة
     }
 }
 
@@ -582,6 +602,8 @@ async function loadSuppliers(showLoader = true) {
     
     try {
         const response = await fetch('/api/suppliers');
+        if (!response.ok) throw new Error('Failed to fetch');
+        
         suppliers = await response.json();
         
         dataCache.suppliers = {
@@ -592,6 +614,11 @@ async function loadSuppliers(showLoader = true) {
         renderSuppliersTable();
     } catch (error) {
         console.error('Error loading suppliers:', error);
+        const tbody = document.getElementById('suppliersTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">لا توجد بيانات</td></tr>';
+        }
+        suppliers = [];
     }
 }
 
@@ -725,12 +752,17 @@ async function loadVouchers(showLoader = true) {
     }
     
     try {
-        const response = await fetch('/api/vouchers');
-        const vouchers = await response.json();
+        const response = await fetch('/api/vouchers?limit=50'); // حد أقل للسرعة
+        if (!response.ok) throw new Error('Failed to fetch');
         
+        const vouchers = await response.json();
         renderVouchersTable(vouchers);
     } catch (error) {
         console.error('Error loading vouchers:', error);
+        const tbody = document.getElementById('vouchersTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">لا توجد سندات</td></tr>';
+        }
     }
 }
 
