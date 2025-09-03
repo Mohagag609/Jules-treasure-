@@ -238,10 +238,19 @@ export default function ProjectDetailsPage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">مراحل المشروع</h3>
-                <button className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                  <Plus className="ml-1 h-4 w-4" />
-                  إضافة مرحلة
-                </button>
+                <div className="flex space-x-2 space-x-reverse">
+                  <Link href="/phases">
+                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200">
+                      عرض كل المراحل
+                    </button>
+                  </Link>
+                  <Link href={`/phases?project_id=${project.id}`}>
+                    <button className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                      <Plus className="ml-1 h-4 w-4" />
+                      إضافة مرحلة
+                    </button>
+                  </Link>
+                </div>
               </div>
               {project.phases.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">لا توجد مراحل مضافة بعد</p>
