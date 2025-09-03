@@ -246,7 +246,9 @@ def handle_vouchers():
         if supplier_id:
             query = query.filter(Voucher.supplier_id == supplier_id)
         
-        vouchers = query.order_by(Voucher.date.desc()).all()
+        # تحديد عدد النتائج لتحسين الأداء
+        limit = request.args.get('limit', 100, type=int)
+        vouchers = query.order_by(Voucher.date.desc()).limit(limit).all()
         result = []
         
         for v in vouchers:
