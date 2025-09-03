@@ -70,7 +70,6 @@ class Supplier(Base):
     # العلاقات
     parent = relationship("Supplier", remote_side=[id], backref="branches")
     vouchers = relationship("Voucher", back_populates="supplier", cascade="all, delete-orphan")
-    projects = relationship("Project", back_populates="supplier", cascade="all, delete-orphan")
 
 # نموذج الخزائن - محدث للنظام المتدرج
 class Safe(Base):
@@ -111,8 +110,6 @@ class Voucher(Base):
     safe_from_id = Column(Integer, ForeignKey("safes.id"), nullable=True)
     safe_to_id = Column(Integer, ForeignKey("safes.id"), nullable=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
-    phase_id = Column(Integer, ForeignKey("project_phases.id"), nullable=True)
     
     # العلاقات
     customer = relationship("Customer", back_populates="vouchers")
@@ -120,8 +117,6 @@ class Voucher(Base):
     safe_from = relationship("Safe", foreign_keys=[safe_from_id], back_populates="vouchers_from")
     safe_to = relationship("Safe", foreign_keys=[safe_to_id], back_populates="vouchers_to")
     category = relationship("Category", back_populates="vouchers")
-    project = relationship("Project", back_populates="vouchers")
-    phase = relationship("ProjectPhase", back_populates="vouchers")
 
 # نموذج الفئات
 class Category(Base):
