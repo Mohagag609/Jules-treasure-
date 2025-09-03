@@ -15,130 +15,162 @@ import {
   BarChart3,
   Building2,
   Wallet,
-  HandshakeIcon
+  HandshakeIcon,
+  Menu,
+  X
 } from 'lucide-react';
+import { useState } from 'react';
 
 const menuItems = [
   {
     title: 'الرئيسية',
     icon: Home,
     href: '/',
-    color: 'text-blue-600'
+    gradient: 'from-blue-500 to-cyan-500'
   },
   {
     title: 'لوحة التحكم',
     icon: BarChart3,
     href: '/dashboard',
-    color: 'text-purple-600'
+    gradient: 'from-purple-500 to-pink-500'
   },
   {
     title: 'الإدخال السريع',
     icon: PlusCircle,
     href: '/quick-entry',
-    color: 'text-green-600'
+    gradient: 'from-green-500 to-emerald-500'
   },
   {
     title: 'المراحل',
     icon: Layers,
     href: '/stages',
-    color: 'text-indigo-600'
+    gradient: 'from-indigo-500 to-blue-500'
   },
   {
     title: 'الشركاء',
     icon: Users,
     href: '/partners',
-    color: 'text-orange-600'
+    gradient: 'from-orange-500 to-red-500'
   },
   {
     title: 'الموردين',
     icon: Truck,
     href: '/suppliers',
-    color: 'text-red-600'
+    gradient: 'from-red-500 to-pink-500'
   },
   {
     title: 'المدفوعات',
     icon: DollarSign,
     href: '/payments',
-    color: 'text-green-600'
+    gradient: 'from-green-500 to-teal-500'
   },
   {
     title: 'التسويات',
     icon: HandshakeIcon,
     href: '/settlements',
-    color: 'text-yellow-600'
+    gradient: 'from-yellow-500 to-orange-500'
   },
   {
     title: 'الخزينة',
     icon: Wallet,
     href: '/treasury',
-    color: 'text-cyan-600'
+    gradient: 'from-cyan-500 to-blue-500'
   },
   {
     title: 'التقارير',
     icon: FileText,
     href: '/reports',
-    color: 'text-pink-600'
+    gradient: 'from-pink-500 to-purple-500'
   },
   {
     title: 'الإعدادات',
     icon: Settings,
     href: '/settings',
-    color: 'text-gray-600'
+    gradient: 'from-gray-500 to-gray-700'
   }
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <aside className="w-64 bg-white shadow-xl h-screen sticky top-0 overflow-y-auto">
-      <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-600">
-        <div className="flex items-center gap-3 text-white">
-          <Building2 className="w-10 h-10" />
-          <div>
-            <h1 className="text-xl font-bold">إدارة المشاريع</h1>
-            <p className="text-xs opacity-90">نظام متكامل للشركاء</p>
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="md:hidden fixed top-4 right-4 z-50 p-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl shadow-lg"
+      >
+        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </button>
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} transition-transform duration-300`}>
+        {/* Logo Section */}
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-600 rounded-xl flex items-center justify-center shadow-xl">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-white">إدارة المشاريع</h1>
+              <p className="text-xs text-gray-400">النظام المتقدم v2.0</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <nav className="p-4">
-        <ul className="space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-r-4 border-blue-600 shadow-sm' 
-                      : 'hover:bg-gray-50 hover:shadow-sm'
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 ${isActive ? item.color : 'text-gray-500'}`} />
-                  <span className={`font-bold ${isActive ? 'text-gray-900 text-base' : 'text-gray-800'}`}>
-                    {item.title}
-                  </span>
-                  {isActive && (
-                    <div className="mr-auto w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+        {/* Navigation */}
+        <nav className="p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className={`sidebar-item group ${isActive ? 'active' : ''}`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-base font-bold">
+                      {item.title}
+                    </span>
+                    {isActive && (
+                      <div className="mr-auto">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      </div>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-      <div className="p-4 mt-auto border-t">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
-          <p className="text-sm text-gray-600 mb-2">نسخة النظام</p>
-          <p className="font-bold text-gray-900">الإصدار 2.0</p>
-          <p className="text-xs text-gray-500 mt-1">محدث ومطور</p>
+        {/* Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="glass rounded-xl p-4 text-center">
+            <div className="text-xs text-gray-400 mb-2">تم التطوير بواسطة</div>
+            <div className="text-sm font-bold text-white">فريق التطوير المتقدم</div>
+            <div className="mt-3 flex justify-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-green-400">النظام يعمل</span>
+            </div>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </>
   );
 }
