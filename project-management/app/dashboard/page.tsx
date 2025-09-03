@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -16,7 +16,6 @@ import {
   ArrowDown,
   Eye
 } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
 export default function DashboardPage() {
   const [stats] = useState({
@@ -25,26 +24,8 @@ export default function DashboardPage() {
     totalSuppliers: 15,
     totalPayments: 245000,
     totalTreasury: 185000,
-    pendingSettlements: 3,
-    monthlyGrowth: 22,
-    completionRate: 78
+    pendingSettlements: 3
   });
-
-  // Data for charts
-  const pieData = [
-    { name: 'مكتملة', value: 65, color: '#10B981' },
-    { name: 'قيد التنفيذ', value: 25, color: '#F59E0B' },
-    { name: 'متأخرة', value: 10, color: '#EF4444' }
-  ];
-
-  const monthlyData = [
-    { month: 'يناير', revenue: 45000, expenses: 32000, profit: 13000 },
-    { month: 'فبراير', revenue: 52000, expenses: 38000, profit: 14000 },
-    { month: 'مارس', revenue: 48000, expenses: 35000, profit: 13000 },
-    { month: 'أبريل', revenue: 61000, expenses: 42000, profit: 19000 },
-    { month: 'مايو', revenue: 55000, expenses: 40000, profit: 15000 },
-    { month: 'يونيو', revenue: 67000, expenses: 45000, profit: 22000 }
-  ];
 
   const statCards = [
     {
@@ -53,9 +34,8 @@ export default function DashboardPage() {
       icon: Layers,
       change: '+12%',
       isPositive: true,
-      gradient: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-500'
+      color: '#3B82F6',
+      bgColor: '#EFF6FF'
     },
     {
       title: 'عدد الشركاء',
@@ -63,9 +43,8 @@ export default function DashboardPage() {
       icon: Users,
       change: '+5%',
       isPositive: true,
-      gradient: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-500'
+      color: '#A855F7',
+      bgColor: '#FAF5FF'
     },
     {
       title: 'عدد الموردين',
@@ -73,9 +52,8 @@ export default function DashboardPage() {
       icon: Users,
       change: '+8%',
       isPositive: true,
-      gradient: 'from-orange-500 to-red-500',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-500'
+      color: '#F97316',
+      bgColor: '#FFF7ED'
     },
     {
       title: 'إجمالي المدفوعات',
@@ -84,9 +62,8 @@ export default function DashboardPage() {
       icon: DollarSign,
       change: '+18%',
       isPositive: true,
-      gradient: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-500'
+      color: '#10B981',
+      bgColor: '#F0FDF4'
     },
     {
       title: 'رصيد الخزينة',
@@ -95,9 +72,8 @@ export default function DashboardPage() {
       icon: Wallet,
       change: '+22%',
       isPositive: true,
-      gradient: 'from-cyan-500 to-blue-500',
-      bgColor: 'bg-cyan-50',
-      borderColor: 'border-cyan-500'
+      color: '#06B6D4',
+      bgColor: '#F0FDFA'
     },
     {
       title: 'التسويات المعلقة',
@@ -105,9 +81,8 @@ export default function DashboardPage() {
       icon: AlertCircle,
       change: '-3',
       isPositive: false,
-      gradient: 'from-red-500 to-pink-500',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-500'
+      color: '#EF4444',
+      bgColor: '#FEF2F2'
     }
   ];
 
@@ -119,185 +94,253 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div style={{ padding: '24px' }}>
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="glass-card" style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '16px',
+        padding: '24px',
+        boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+        marginBottom: '24px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 className="text-4xl font-black bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <h1 style={{
+              fontSize: '36px',
+              fontWeight: 900,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
               لوحة التحكم
             </h1>
-            <p className="text-gray-600 mt-2 font-semibold">مرحباً بك في النظام المتقدم لإدارة المشاريع</p>
+            <p style={{ color: '#6B7280', marginTop: '8px', fontSize: '16px', fontWeight: 600 }}>
+              مرحباً بك في النظام المتقدم لإدارة المشاريع
+            </p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-left">
-              <p className="text-sm text-gray-500 font-semibold">آخر تحديث</p>
-              <p className="text-lg font-bold">{new Date().toLocaleString('ar-EG')}</p>
-            </div>
-            <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              عرض التقرير
-            </button>
-          </div>
+          <button className="btn-primary" style={{
+            background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            fontWeight: 700,
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '16px'
+          }}>
+            <Eye style={{ width: '20px', height: '20px' }} />
+            عرض التقرير
+          </button>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <div key={index} className={`${card.bgColor} backdrop-blur-lg rounded-2xl p-6 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-t-4 ${card.borderColor} group`}>
-              <div className="flex justify-between items-start mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-6 h-6 text-white" />
+            <div key={index} className="stat-card" style={{
+              background: card.bgColor,
+              borderRadius: '16px',
+              padding: '20px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              borderTop: `4px solid ${card.color}`,
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '16px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${card.color} 0%, ${card.color}cc 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 4px 15px ${card.color}40`
+                }}>
+                  <Icon style={{ width: '24px', height: '24px', color: 'white' }} />
                 </div>
-                <div className={`flex items-center gap-1 text-sm font-bold ${card.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                  {card.isPositive ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: card.isPositive ? '#10B981' : '#EF4444'
+                }}>
+                  {card.isPositive ? <ArrowUp style={{ width: '16px', height: '16px' }} /> : <ArrowDown style={{ width: '16px', height: '16px' }} />}
                   {card.change}
                 </div>
               </div>
-              <h3 className="text-gray-700 text-sm font-bold mb-1">{card.title}</h3>
-              <p className="text-3xl font-black text-gray-900">
+              <h3 style={{ color: '#6B7280', fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>{card.title}</h3>
+              <p style={{ fontSize: '28px', fontWeight: 900, color: '#111827' }}>
                 {card.value}
-                {card.unit && <span className="text-lg text-gray-600 mr-1">{card.unit}</span>}
+                {card.unit && <span style={{ fontSize: '16px', color: '#6B7280', marginRight: '4px' }}> {card.unit}</span>}
               </p>
             </div>
           );
         })}
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pie Chart */}
-        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            حالة المراحل
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Area Chart */}
-        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50 lg:col-span-2">
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            الأداء المالي الشهري
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={monthlyData}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                </linearGradient>
-                <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="month" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                  border: 'none',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-                }}
-              />
-              <Area type="monotone" dataKey="revenue" stroke="#10B981" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={3} />
-              <Area type="monotone" dataKey="expenses" stroke="#EF4444" fillOpacity={1} fill="url(#colorExpenses)" strokeWidth={3} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Progress Section */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '24px',
+        marginBottom: '24px'
+      }}>
         {/* Progress Stats */}
-        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
-          <h3 className="text-xl font-bold mb-6">مؤشرات الأداء</h3>
-          <div className="space-y-4">
+        <div className="glass-card" style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          padding: '24px',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+        }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '24px', color: '#111827' }}>مؤشرات الأداء</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-bold text-gray-700">معدل الإنجاز</span>
-                <span className="text-sm font-bold text-blue-600">78%</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#374151' }}>معدل الإنجاز</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#3B82F6' }}>78%</span>
               </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500" style={{ width: '78%' }}></div>
+              <div className="progress-bar" style={{
+                width: '100%',
+                height: '12px',
+                background: '#E5E7EB',
+                borderRadius: '999px',
+                overflow: 'hidden'
+              }}>
+                <div className="progress-fill" style={{
+                  width: '78%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #3B82F6 0%, #A855F7 100%)',
+                  borderRadius: '999px',
+                  transition: 'width 0.5s ease'
+                }} />
               </div>
             </div>
             <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-bold text-gray-700">استخدام الميزانية</span>
-                <span className="text-sm font-bold text-green-600">65%</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#374151' }}>استخدام الميزانية</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#10B981' }}>65%</span>
               </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-500" style={{ width: '65%' }}></div>
+              <div className="progress-bar" style={{
+                width: '100%',
+                height: '12px',
+                background: '#E5E7EB',
+                borderRadius: '999px',
+                overflow: 'hidden'
+              }}>
+                <div className="progress-fill" style={{
+                  width: '65%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
+                  borderRadius: '999px',
+                  transition: 'width 0.5s ease'
+                }} />
               </div>
             </div>
             <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-bold text-gray-700">رضا العملاء</span>
-                <span className="text-sm font-bold text-purple-600">92%</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#374151' }}>رضا العملاء</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#A855F7' }}>92%</span>
               </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-purple-500 to-pink-600 rounded-full transition-all duration-500" style={{ width: '92%' }}></div>
+              <div className="progress-bar" style={{
+                width: '100%',
+                height: '12px',
+                background: '#E5E7EB',
+                borderRadius: '999px',
+                overflow: 'hidden'
+              }}>
+                <div className="progress-fill" style={{
+                  width: '92%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 100%)',
+                  borderRadius: '999px',
+                  transition: 'width 0.5s ease'
+                }} />
               </div>
             </div>
           </div>
         </div>
 
         {/* Recent Activities */}
-        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50">
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <Activity className="w-5 h-5 text-purple-600" />
+        <div className="glass-card" style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          padding: '24px',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+        }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '24px', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Activity style={{ width: '20px', height: '20px', color: '#A855F7' }} />
             النشاطات الأخيرة
           </h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '256px', overflowY: 'auto' }}>
             {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition group">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow group-hover:scale-110 transition-transform ${
-                  activity.status === 'success' ? 'bg-gradient-to-br from-green-400 to-green-600' :
-                  activity.status === 'warning' ? 'bg-gradient-to-br from-yellow-400 to-orange-600' :
-                  'bg-gradient-to-br from-blue-400 to-blue-600'
-                }`}>
-                  {activity.status === 'success' ? <CheckCircle className="w-5 h-5 text-white" /> :
-                   activity.status === 'warning' ? <AlertCircle className="w-5 h-5 text-white" /> :
-                   <Clock className="w-5 h-5 text-white" />}
+              <div key={activity.id} style={{
+                display: 'flex',
+                alignItems: 'start',
+                gap: '12px',
+                padding: '12px',
+                borderRadius: '12px',
+                background: '#F9FAFB',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#F3F4F6';
+                e.currentTarget.style.transform = 'translateX(-4px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#F9FAFB';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: activity.status === 'success' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' :
+                             activity.status === 'warning' ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' :
+                             'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+                }}>
+                  {activity.status === 'success' ? <CheckCircle style={{ width: '20px', height: '20px', color: 'white' }} /> :
+                   activity.status === 'warning' ? <AlertCircle style={{ width: '20px', height: '20px', color: 'white' }} /> :
+                   <Clock style={{ width: '20px', height: '20px', color: 'white' }} />}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-gray-900">{activity.message}</p>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>{activity.message}</p>
                   {activity.amount && (
-                    <p className="text-sm font-bold text-gray-600 mt-1">
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#6B7280', marginTop: '4px' }}>
                       {activity.amount.toLocaleString('ar-EG')} جنيه
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1 font-semibold">{activity.time}</p>
+                  <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px', fontWeight: 500 }}>{activity.time}</p>
                 </div>
               </div>
             ))}
