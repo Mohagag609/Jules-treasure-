@@ -3,28 +3,15 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
-import sqlite3
 
 Base = declarative_base()
 
-# Database configuration
-DATABASE_URL = os.environ.get('DATABASE_URL')
+# Database configuration - Use SQLite only for simplicity
+DATABASE_PATH = os.environ.get('DATABASE_PATH', 'treasury.db')
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
-# Fix for Render's PostgreSQL URL format and use pg8000
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    # Convert to pg8000 format
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
-elif DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
-    # Convert to pg8000 format
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
-
-# Use SQLite for local development if DATABASE_URL is not set
-if not DATABASE_URL:
-    DATABASE_URL = "sqlite:///treasury.db"
-    engine = create_engine(DATABASE_URL)
-else:
-    # For PostgreSQL on Render with pg8000
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
+print(f"Using database: {DATABASE_URL}")
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # نموذج العملاء
