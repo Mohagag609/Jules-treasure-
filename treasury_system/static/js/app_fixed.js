@@ -8,13 +8,24 @@ let currentEntityType = null;
 
 // تهيئة التطبيق عند التحميل - بدون رسالة تحميل مزعجة
 document.addEventListener('DOMContentLoaded', function() {
-    // تحميل البيانات بهدوء في الخلفية
-    loadInitialData();
-    setupKeyboardShortcuts();
-    setupAutoComplete();
+    // إخفاء أي رسالة تحميل موجودة فوراً
+    const existingLoader = document.getElementById('globalLoader');
+    if (existingLoader) {
+        existingLoader.remove();
+    }
     
-    // تحديث الإحصائيات
-    loadDashboard();
+    // إخفاء أي spinners في الجداول
+    document.querySelectorAll('.spinner-border').forEach(spinner => {
+        spinner.style.display = 'none';
+    });
+    
+    // تحميل البيانات بهدوء في الخلفية
+    setTimeout(() => {
+        loadInitialData();
+        setupKeyboardShortcuts();
+        setupAutoComplete();
+        loadDashboard();
+    }, 100);
     
     // تحديث دوري كل دقيقة
     setInterval(loadDashboard, 60000);
