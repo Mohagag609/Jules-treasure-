@@ -33,6 +33,16 @@ def index():
 def safes_tree():
     return render_template('safes_tree.html')
 
+# صفحة العملاء المتدرجة
+@app.route('/customers-tree')
+def customers_tree():
+    return render_template('customers_tree.html')
+
+# صفحة الموردين المتدرجة
+@app.route('/suppliers-tree')
+def suppliers_tree():
+    return render_template('suppliers_tree.html')
+
 # ============= العملاء =============
 @app.route('/api/customers', methods=['GET', 'POST'])
 def handle_customers():
@@ -42,14 +52,33 @@ def handle_customers():
         customers = db.query(Customer).all()
         result = []
         for c in customers:
-            # حساب الرصيد الحالي
-            balance = get_previous_balance('customer', c.id)
+            # حساب الرصيد حسب نوع العميل
+            if c.is_group:
+                balance = get_customer_group_balance(c.id)
+            else:
+                balance = get_previous_balance('customer', c.id)
+            
+            # جمع معلومات الفروع
+            branches_data = []
+            for branch in c.branches:
+                branch_balance = get_customer_group_balance(branch.id) if branch.is_group else get_previous_balance('customer', branch.id)
+                branches_data.append({
+                    'id': branch.id,
+                    'name': branch.name,
+                    'balance': branch_balance,
+                    'is_group': branch.is_group
+                })
+            
             result.append({
                 'id': c.id,
                 'name': c.name,
                 'phone': c.phone,
                 'address': c.address,
                 'balance': balance,
+                'parent_customer_id': c.parent_customer_id,
+                'is_group': c.is_group,
+                'level': c.level,
+                'branches': branches_data,
                 'created_at': c.created_at.isoformat()
             })
         db.close()
@@ -57,10 +86,22 @@ def handle_customers():
     
     elif request.method == 'POST':
         data = request.json
+        
+        # تحديد المستوى بناءً على العميل الأب
+        parent_id = data.get('parent_customer_id')
+        level = 0
+        if parent_id:
+            parent = db.query(Customer).filter_by(id=parent_id).first()
+            if parent:
+                level = parent.level + 1
+        
         customer = Customer(
             name=data['name'],
             phone=data.get('phone', ''),
-            address=data.get('address', '')
+            address=data.get('address', ''),
+            parent_customer_id=parent_id,
+            is_group=data.get('is_group', False),
+            level=level
         )
         db.add(customer)
         db.commit()
@@ -70,7 +111,10 @@ def handle_customers():
             'name': customer.name,
             'phone': customer.phone,
             'address': customer.address,
-            'balance': 0
+            'balance': 0,
+            'parent_customer_id': customer.parent_customer_id,
+            'is_group': customer.is_group,
+            'level': customer.level
         }
         db.close()
         return jsonify(result), 201
@@ -108,13 +152,33 @@ def handle_suppliers():
         suppliers = db.query(Supplier).all()
         result = []
         for s in suppliers:
-            balance = get_previous_balance('supplier', s.id)
+            # حساب الرصيد حسب نوع المورد
+            if s.is_group:
+                balance = get_supplier_group_balance(s.id)
+            else:
+                balance = get_previous_balance('supplier', s.id)
+            
+            # جمع معلومات الفروع
+            branches_data = []
+            for branch in s.branches:
+                branch_balance = get_supplier_group_balance(branch.id) if branch.is_group else get_previous_balance('supplier', branch.id)
+                branches_data.append({
+                    'id': branch.id,
+                    'name': branch.name,
+                    'balance': branch_balance,
+                    'is_group': branch.is_group
+                })
+            
             result.append({
                 'id': s.id,
                 'name': s.name,
                 'phone': s.phone,
                 'address': s.address,
                 'balance': balance,
+                'parent_supplier_id': s.parent_supplier_id,
+                'is_group': s.is_group,
+                'level': s.level,
+                'branches': branches_data,
                 'created_at': s.created_at.isoformat()
             })
         db.close()
@@ -122,10 +186,22 @@ def handle_suppliers():
     
     elif request.method == 'POST':
         data = request.json
+        
+        # تحديد المستوى بناءً على المورد الأب
+        parent_id = data.get('parent_supplier_id')
+        level = 0
+        if parent_id:
+            parent = db.query(Supplier).filter_by(id=parent_id).first()
+            if parent:
+                level = parent.level + 1
+        
         supplier = Supplier(
             name=data['name'],
             phone=data.get('phone', ''),
-            address=data.get('address', '')
+            address=data.get('address', ''),
+            parent_supplier_id=parent_id,
+            is_group=data.get('is_group', False),
+            level=level
         )
         db.add(supplier)
         db.commit()
@@ -135,7 +211,10 @@ def handle_suppliers():
             'name': supplier.name,
             'phone': supplier.phone,
             'address': supplier.address,
-            'balance': 0
+            'balance': 0,
+            'parent_supplier_id': supplier.parent_supplier_id,
+            'is_group': supplier.is_group,
+            'level': supplier.level
         }
         db.close()
         return jsonify(result), 201
@@ -252,6 +331,86 @@ def get_safes_tree():
     tree = []
     for safe in root_safes:
         tree.append(build_tree(safe))
+    
+    db.close()
+    return jsonify(tree)
+
+# ============= العملاء الهرمية =============
+@app.route('/api/customers/tree')
+def get_customers_tree():
+    """الحصول على العملاء بشكل هرمي"""
+    db = SessionLocal()
+    
+    # جلب العملاء الرئيسيين فقط (بدون أب)
+    root_customers = db.query(Customer).filter(Customer.parent_customer_id == None).all()
+    
+    def build_tree(customer):
+        """بناء شجرة العملاء بشكل تكراري"""
+        if customer.is_group:
+            balance = get_customer_group_balance(customer.id)
+        else:
+            balance = get_previous_balance('customer', customer.id)
+        
+        node = {
+            'id': customer.id,
+            'name': customer.name,
+            'phone': customer.phone,
+            'address': customer.address,
+            'balance': balance,
+            'is_group': customer.is_group,
+            'level': customer.level,
+            'branches': []
+        }
+        
+        # إضافة الفروع
+        for branch in customer.branches:
+            node['branches'].append(build_tree(branch))
+        
+        return node
+    
+    tree = []
+    for customer in root_customers:
+        tree.append(build_tree(customer))
+    
+    db.close()
+    return jsonify(tree)
+
+# ============= الموردين الهرمية =============
+@app.route('/api/suppliers/tree')
+def get_suppliers_tree():
+    """الحصول على الموردين بشكل هرمي"""
+    db = SessionLocal()
+    
+    # جلب الموردين الرئيسيين فقط (بدون أب)
+    root_suppliers = db.query(Supplier).filter(Supplier.parent_supplier_id == None).all()
+    
+    def build_tree(supplier):
+        """بناء شجرة الموردين بشكل تكراري"""
+        if supplier.is_group:
+            balance = get_supplier_group_balance(supplier.id)
+        else:
+            balance = get_previous_balance('supplier', supplier.id)
+        
+        node = {
+            'id': supplier.id,
+            'name': supplier.name,
+            'phone': supplier.phone,
+            'address': supplier.address,
+            'balance': balance,
+            'is_group': supplier.is_group,
+            'level': supplier.level,
+            'branches': []
+        }
+        
+        # إضافة الفروع
+        for branch in supplier.branches:
+            node['branches'].append(build_tree(branch))
+        
+        return node
+    
+    tree = []
+    for supplier in root_suppliers:
+        tree.append(build_tree(supplier))
     
     db.close()
     return jsonify(tree)

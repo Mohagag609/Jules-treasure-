@@ -291,7 +291,7 @@ function updateSuppliersTable() {
     });
 }
 
-// تحديث قائمة الخزائن
+// تحديث قائمة الخزائن مع النظام الهرمي
 function updateSafesSelect() {
     const select = document.getElementById('safeSelect');
     if (!select) return;
@@ -299,9 +299,28 @@ function updateSafesSelect() {
     const currentValue = select.value;
     select.innerHTML = '<option value="">اختر الخزينة</option>';
     
-    safes.forEach(safe => {
-        select.innerHTML += `<option value="${safe.id}">${safe.name}${safe.is_main ? ' (رئيسية)' : ''}</option>`;
-    });
+    // ترتيب الخزائن هرمياً
+    const rootSafes = safes.filter(s => !s.parent_safe_id);
+    
+    function addOptions(safeList, prefix = '') {
+        safeList.forEach(safe => {
+            // فقط أضف الخزائن غير الحاوية
+            if (!safe.is_container) {
+                const option = document.createElement('option');
+                option.value = safe.id;
+                option.textContent = `${prefix}${safe.name} (${formatMoney(safe.balance || 0)})`;
+                select.appendChild(option);
+            }
+            
+            // أضف الخزائن الفرعية
+            const children = safes.filter(s => s.parent_safe_id === safe.id);
+            if (children.length > 0) {
+                addOptions(children, prefix + '  └─ ');
+            }
+        });
+    }
+    
+    addOptions(rootSafes);
     
     if (currentValue) select.value = currentValue;
 }

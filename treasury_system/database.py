@@ -29,7 +29,7 @@ else:
     )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# نموذج العملاء
+# نموذج العملاء - محدث للنظام الهرمي
 class Customer(Base):
     __tablename__ = "customers"
     
@@ -38,12 +38,19 @@ class Customer(Base):
     phone = Column(String(50))
     address = Column(Text)
     balance = Column(Float, default=0.0)
+    
+    # حقول جديدة للنظام الهرمي
+    parent_customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
+    is_group = Column(Boolean, default=False)  # هل مجموعة (شركة رئيسية) أم عميل فردي/فرع
+    level = Column(Integer, default=0)  # 0=رئيسي، 1=فرع، 2=فرع من فرع
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # العلاقات
+    parent = relationship("Customer", remote_side=[id], backref="branches")
     vouchers = relationship("Voucher", back_populates="customer", cascade="all, delete-orphan")
 
-# نموذج الموردين
+# نموذج الموردين - محدث للنظام الهرمي
 class Supplier(Base):
     __tablename__ = "suppliers"
     
@@ -52,9 +59,16 @@ class Supplier(Base):
     phone = Column(String(50))
     address = Column(Text)
     balance = Column(Float, default=0.0)
+    
+    # حقول جديدة للنظام الهرمي
+    parent_supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=True)
+    is_group = Column(Boolean, default=False)  # هل مجموعة (شركة رئيسية) أم مورد فردي/فرع
+    level = Column(Integer, default=0)  # 0=رئيسي، 1=فرع، 2=فرع من فرع
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # العلاقات
+    parent = relationship("Supplier", remote_side=[id], backref="branches")
     vouchers = relationship("Voucher", back_populates="supplier", cascade="all, delete-orphan")
 
 # نموذج الخزائن - محدث للنظام المتدرج
@@ -261,3 +275,51 @@ def create_sub_safe(parent_id, name, is_container=False):
     db.close()
     
     return sub_safe
+
+# دالة لحساب رصيد مجموعة العملاء
+def get_customer_group_balance(customer_id):
+    """حساب رصيد مجموعة العملاء من مجموع الفروع"""
+    db = SessionLocal()
+    customer = db.query(Customer).filter_by(id=customer_id).first()
+    
+    if not customer or not customer.is_group:
+        db.close()
+        return get_previous_balance('customer', customer_id) if customer else 0
+    
+    total_balance = 0
+    
+    # حساب مجموع أرصدة الفروع
+    for branch in customer.branches:
+        if branch.is_group:
+            # إذا كان الفرع أيضاً مجموعة، احسب مجموع فروعه
+            total_balance += get_customer_group_balance(branch.id)
+        else:
+            # إذا كان عميل عادي، احسب رصيده
+            total_balance += get_previous_balance('customer', branch.id)
+    
+    db.close()
+    return total_balance
+
+# دالة لحساب رصيد مجموعة الموردين
+def get_supplier_group_balance(supplier_id):
+    """حساب رصيد مجموعة الموردين من مجموع الفروع"""
+    db = SessionLocal()
+    supplier = db.query(Supplier).filter_by(id=supplier_id).first()
+    
+    if not supplier or not supplier.is_group:
+        db.close()
+        return get_previous_balance('supplier', supplier_id) if supplier else 0
+    
+    total_balance = 0
+    
+    # حساب مجموع أرصدة الفروع
+    for branch in supplier.branches:
+        if branch.is_group:
+            # إذا كان الفرع أيضاً مجموعة، احسب مجموع فروعه
+            total_balance += get_supplier_group_balance(branch.id)
+        else:
+            # إذا كان مورد عادي، احسب رصيده
+            total_balance += get_previous_balance('supplier', branch.id)
+    
+    db.close()
+    return total_balance
