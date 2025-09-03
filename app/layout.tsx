@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast';
 
 // Auto-initialize database on production
 if (process.env.NODE_ENV === 'production') {
-  import('@/lib/db/auto-init');
+  import('@/lib/db/auto-init-improved');
 }
 
 const cairo = Cairo({ 
