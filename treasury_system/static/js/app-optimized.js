@@ -58,6 +58,12 @@ function toggleSidebar() {
 function navigateToPage(page) {
     if (isLoading) return;
     
+    // Special handling for projects page
+    if (page === 'projects') {
+        window.location.href = '/projects';
+        return;
+    }
+    
     // Hide all pages
     document.querySelectorAll('.page-content').forEach(content => {
         content.classList.remove('active');
@@ -1396,7 +1402,205 @@ function findItemById(items, id) {
     return null;
 }
 
+// Quick Voucher Functions
+function showQuickVoucherModal() {
+    document.getElementById('quickVoucherForm').reset();
+    loadQuickVoucherData();
+    
+    // Setup project checkbox listener
+    document.getElementById('linkToProject').addEventListener('change', function() {
+        document.getElementById('projectSection').style.display = this.checked ? 'block' : 'none';
+        if (this.checked) {
+            loadProjectsForQuickEntry();
+        }
+    });
+    
+    // Setup type change listener
+    document.querySelectorAll('input[name="quickType"]').forEach(radio => {
+        radio.addEventListener('change', updateQuickVoucherEntity);
+    });
+    
+    const modal = new bootstrap.Modal(document.getElementById('quickVoucherModal'));
+    modal.show();
+}
+
+async function loadQuickVoucherData() {
+    // Load safes
+    if (!isCacheValid('safes')) {
+        await loadSafes();
+    }
+    
+    const safeSelect = document.getElementById('quickVoucherSafe');
+    if (safeSelect) {
+        const safes = dataCache.safes.data || [];
+        safeSelect.innerHTML = '<option value="">اختر الخزينة...</option>';
+        
+        function addSafesToSelect(safesArray, level = 0) {
+            safesArray.forEach(safe => {
+                if (!safe.is_container) {
+                    const option = document.createElement('option');
+                    option.value = safe.id;
+                    option.textContent = '  '.repeat(level) + safe.name;
+                    safeSelect.appendChild(option);
+                }
+                if (safe.children) {
+                    addSafesToSelect(safe.children, level + 1);
+                }
+            });
+        }
+        
+        addSafesToSelect(safes);
+    }
+    
+    // Load initial entities
+    updateQuickVoucherEntity();
+}
+
+async function updateQuickVoucherEntity() {
+    const type = document.querySelector('input[name="quickType"]:checked').value;
+    const entitySelect = document.getElementById('quickVoucherEntity');
+    
+    if (!entitySelect) return;
+    
+    entitySelect.innerHTML = '<option value="">اختر...</option>';
+    
+    if (type === 'receipt') {
+        // Load customers
+        if (!isCacheValid('customers')) {
+            await loadCustomers();
+        }
+        
+        const customers = dataCache.customers.data || [];
+        function addCustomersToSelect(customersArray, level = 0) {
+            customersArray.forEach(customer => {
+                if (!customer.is_group) {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = '  '.repeat(level) + customer.name;
+                    entitySelect.appendChild(option);
+                }
+                if (customer.branches) {
+                    addCustomersToSelect(customer.branches, level + 1);
+                }
+            });
+        }
+        addCustomersToSelect(customers);
+        
+    } else if (type === 'payment') {
+        // Load suppliers
+        if (!isCacheValid('suppliers')) {
+            await loadSuppliers();
+        }
+        
+        const suppliers = dataCache.suppliers.data || [];
+        function addSuppliersToSelect(suppliersArray, level = 0) {
+            suppliersArray.forEach(supplier => {
+                if (!supplier.is_group) {
+                    const option = document.createElement('option');
+                    option.value = supplier.id;
+                    option.textContent = '  '.repeat(level) + supplier.name;
+                    entitySelect.appendChild(option);
+                }
+                if (supplier.branches) {
+                    addSuppliersToSelect(supplier.branches, level + 1);
+                }
+            });
+        }
+        addSuppliersToSelect(suppliers);
+    }
+}
+
+async function loadProjectsForQuickEntry() {
+    try {
+        const response = await fetch('/api/projects');
+        const projects = await response.json();
+        
+        const select = document.getElementById('quickVoucherProject');
+        select.innerHTML = '<option value="">اختر المشروع...</option>' +
+            projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        
+        // Add change listener for project
+        select.addEventListener('change', async function() {
+            if (this.value) {
+                const phasesRes = await fetch(`/api/projects/${this.value}/phases`);
+                const phases = await phasesRes.json();
+                
+                const phaseSelect = document.getElementById('quickVoucherPhase');
+                phaseSelect.innerHTML = '<option value="">اختر المرحلة...</option>' +
+                    phases.map(ph => `<option value="${ph.id}">${ph.name}</option>`).join('');
+            }
+        });
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+}
+
+async function saveQuickVoucher() {
+    const type = document.querySelector('input[name="quickType"]:checked').value;
+    const amount = document.getElementById('quickVoucherAmount').value;
+    const safeId = document.getElementById('quickVoucherSafe').value;
+    const entityId = document.getElementById('quickVoucherEntity').value;
+    const description = document.getElementById('quickVoucherDescription').value;
+    
+    if (!amount || !safeId) {
+        showAlert('يرجى ملء الحقول المطلوبة', 'warning');
+        return;
+    }
+    
+    const data = {
+        voucher_type: type,
+        amount: parseFloat(amount),
+        description: description,
+        date: new Date().toISOString().split('T')[0]
+    };
+    
+    // Add project info if linked
+    if (document.getElementById('linkToProject').checked) {
+        data.project_id = document.getElementById('quickVoucherProject').value;
+        data.phase_id = document.getElementById('quickVoucherPhase').value;
+    }
+    
+    // Set safe and entity based on type
+    if (type === 'receipt') {
+        data.customer_id = entityId ? parseInt(entityId) : null;
+        data.safe_to_id = parseInt(safeId);
+    } else if (type === 'payment') {
+        data.supplier_id = entityId ? parseInt(entityId) : null;
+        data.safe_from_id = parseInt(safeId);
+    }
+    
+    try {
+        const url = data.project_id ? '/api/quick-voucher' : '/api/vouchers';
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            bootstrap.Modal.getInstance(document.getElementById('quickVoucherModal')).hide();
+            showAlert(`تم إنشاء السند ${result.voucher_number || ''} بنجاح`, 'success');
+            
+            // Refresh data
+            dataCache.vouchers.timestamp = 0;
+            if (currentPage === 'dashboard') {
+                await loadDashboard();
+            } else if (currentPage === 'vouchers') {
+                await loadVouchers(true);
+            }
+        } else {
+            const error = await response.json();
+            showAlert(error.error || 'خطأ في حفظ السند', 'danger');
+        }
+    } catch (error) {
+        showAlert('خطأ في الاتصال', 'danger');
+    }
+}
+
 // Export functions
+window.showQuickVoucherModal = showQuickVoucherModal;
+window.saveQuickVoucher = saveQuickVoucher;
 window.addSafe = addSafe;
 window.viewSafe = viewSafe;
 window.editSafe = editSafe;

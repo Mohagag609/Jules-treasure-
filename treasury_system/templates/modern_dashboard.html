@@ -590,6 +590,13 @@
             </div>
             
             <div class="menu-item">
+                <a href="/projects" class="menu-link">
+                    <i class="fas fa-project-diagram menu-icon"></i>
+                    <span class="menu-text">المشاريع</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
                 <a href="#" class="menu-link" data-page="vouchers">
                     <i class="fas fa-file-invoice menu-icon"></i>
                     <span class="menu-text">السندات</span>
@@ -770,6 +777,70 @@
                 </div>
             </div>
             
+            <!-- Projects Page -->
+            <div class="page-content" id="projects-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>المشاريع المتكاملة</h2>
+                    <div>
+                        <button class="btn btn-danger me-2" onclick="showQuickProjectEntry()">
+                            <i class="fas fa-bolt"></i> إدخال سريع
+                        </button>
+                        <button class="btn btn-modern btn-primary-gradient" onclick="addProject()">
+                            <i class="fas fa-plus"></i> مشروع جديد
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-primary">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="totalProjects">0</h3>
+                                <p>المشاريع النشطة</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-success">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="totalPartners">0</h3>
+                                <p>الشركاء</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-warning">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="projectInvestment">0</h3>
+                                <p>إجمالي الاستثمار</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-danger">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3 id="projectProfit">0</h3>
+                                <p>الأرباح المحققة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="projectsList"></div>
+            </div>
+            
             <!-- Vouchers Page -->
             <div class="page-content" id="vouchers-page">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -872,6 +943,35 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
+    
+    <!-- Quick Entry Button -->
+    <style>
+        .quick-entry-fab {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        
+        .quick-entry-fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+    </style>
+    
+    <button class="quick-entry-fab" onclick="showQuickVoucherModal()" title="إدخال سريع">
+        <i class="fas fa-bolt"></i>
+    </button>
     
     <!-- Modals -->
     <!-- Safe Modal -->
@@ -999,6 +1099,101 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="button" class="btn btn-warning" onclick="saveSupplier()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Voucher Modal -->
+    <div class="modal fade" id="quickVoucherModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-bolt"></i> إدخال سريع للسندات
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quickVoucherForm">
+                        <div class="mb-3">
+                            <label class="form-label">نوع السند</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="quickType" id="quickReceipt" value="receipt" checked>
+                                <label class="btn btn-outline-success" for="quickReceipt">
+                                    <i class="fas fa-arrow-down"></i> قبض
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="quickType" id="quickPayment" value="payment">
+                                <label class="btn btn-outline-danger" for="quickPayment">
+                                    <i class="fas fa-arrow-up"></i> صرف
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">المبلغ</label>
+                                    <input type="number" class="form-control form-control-lg" id="quickVoucherAmount" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">الخزينة</label>
+                                    <select class="form-select" id="quickVoucherSafe" required>
+                                        <option value="">اختر...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">الطرف</label>
+                            <select class="form-select" id="quickVoucherEntity">
+                                <option value="">اختر...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">الوصف (اختياري)</label>
+                            <input type="text" class="form-control" id="quickVoucherDescription" placeholder="وصف مختصر...">
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="linkToProject">
+                            <label class="form-check-label" for="linkToProject">
+                                ربط بمشروع
+                            </label>
+                        </div>
+                        
+                        <div id="projectSection" style="display:none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">المشروع</label>
+                                        <select class="form-select" id="quickVoucherProject">
+                                            <option value="">اختر...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">المرحلة</label>
+                                        <select class="form-select" id="quickVoucherPhase">
+                                            <option value="">اختر...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-danger" onclick="saveQuickVoucher()">
+                        <i class="fas fa-save"></i> حفظ السند
+                    </button>
                 </div>
             </div>
         </div>
