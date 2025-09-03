@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/database';
+import db from '@/lib/db/postgres';
 
 // POST - إضافة شريك لمشروع
 export async function POST(request: NextRequest) {
@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
     }
     
     // التحقق من أن مجموع النسب لا يتجاوز 100%
-    const currentPercentages = db.prepare(`
-      SELECT SUM(percentage) as total FROM project_partners WHERE project_id = ?
-    `).get(project_id) as any;
+    const currentPercentages = await db.getOne(`
+      SELECT SUM(percentage) as total FROM project_partners WHERE project_id = $1
+    `, [project_id]);
     
     const totalPercentage = (currentPercentages?.total || 0) + percentage;
     if (totalPercentage > 100) {
@@ -28,39 +28,42 @@ export async function POST(request: NextRequest) {
     }
     
     // حساب المبلغ المستحق بناء على إجمالي تكلفة المراحل
-    const phasesTotal = db.prepare(`
-      SELECT SUM(amount_required) as total FROM phases WHERE project_id = ?
-    `).get(project_id) as any;
+    const phasesTotal = await db.getOne(`
+      SELECT SUM(amount_required) as total FROM phases WHERE project_id = $1
+    `, [project_id]);
     
     const amountDue = (phasesTotal?.total || 0) * (percentage / 100);
     
-    const result = db.prepare(`
-      INSERT INTO project_partners (project_id, partner_id, percentage, amount_due, amount_paid)
-      VALUES (?, ?, ?, ?, 0)
-    `).run(project_id, partner_id, percentage, amountDue);
-    
-    const newProjectPartner = db.prepare(`
-      SELECT 
-        pp.*,
-        p.name as partner_name,
-        p.phone,
-        p.email
-      FROM project_partners pp
-      JOIN partners p ON pp.partner_id = p.id
-      WHERE pp.id = ?
-    `).get(result.lastInsertRowid);
-    
-    return NextResponse.json(newProjectPartner, { status: 201 });
+    try {
+      const newProjectPartner = await db.insert(`
+        INSERT INTO project_partners (project_id, partner_id, percentage, amount_due, amount_paid)
+        VALUES ($1, $2, $3, $4, 0)
+      `, [project_id, partner_id, percentage, amountDue]);
+      
+      // جلب معلومات الشريك
+      const partnerInfo = await db.getOne(`
+        SELECT 
+          pp.*,
+          p.name as partner_name,
+          p.phone,
+          p.email
+        FROM project_partners pp
+        JOIN partners p ON pp.partner_id = p.id
+        WHERE pp.id = $1
+      `, [newProjectPartner.id]);
+      
+      return NextResponse.json(partnerInfo, { status: 201 });
+    } catch (error: any) {
+      if (error.message?.includes('duplicate key') || error.message?.includes('UNIQUE constraint')) {
+        return NextResponse.json(
+          { error: 'This partner is already added to the project' },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
   } catch (error: any) {
     console.error('Error adding partner to project:', error);
-    
-    if (error.message?.includes('UNIQUE constraint')) {
-      return NextResponse.json(
-        { error: 'This partner is already added to the project' },
-        { status: 400 }
-      );
-    }
-    
     return NextResponse.json(
       { error: 'Failed to add partner to project' },
       { status: 500 }
@@ -82,7 +85,7 @@ export async function PUT(request: NextRequest) {
     }
     
     // جلب معلومات الشريك الحالية
-    const currentPartner = db.prepare('SELECT * FROM project_partners WHERE id = ?').get(id) as any;
+    const currentPartner = await db.getOne('SELECT * FROM project_partners WHERE id = $1', [id]);
     
     if (!currentPartner) {
       return NextResponse.json(
@@ -92,11 +95,11 @@ export async function PUT(request: NextRequest) {
     }
     
     // التحقق من أن مجموع النسب لا يتجاوز 100%
-    const otherPartnersTotal = db.prepare(`
+    const otherPartnersTotal = await db.getOne(`
       SELECT SUM(percentage) as total 
       FROM project_partners 
-      WHERE project_id = ? AND id != ?
-    `).get(currentPartner.project_id, id) as any;
+      WHERE project_id = $1 AND id != $2
+    `, [currentPartner.project_id, id]);
     
     const totalPercentage = (otherPartnersTotal?.total || 0) + percentage;
     if (totalPercentage > 100) {
@@ -107,19 +110,20 @@ export async function PUT(request: NextRequest) {
     }
     
     // إعادة حساب المبلغ المستحق
-    const phasesTotal = db.prepare(`
-      SELECT SUM(amount_required) as total FROM phases WHERE project_id = ?
-    `).get(currentPartner.project_id) as any;
+    const phasesTotal = await db.getOne(`
+      SELECT SUM(amount_required) as total FROM phases WHERE project_id = $1
+    `, [currentPartner.project_id]);
     
     const amountDue = (phasesTotal?.total || 0) * (percentage / 100);
     
-    db.prepare(`
+    const updatedPartner = await db.update(`
       UPDATE project_partners 
-      SET percentage = ?, amount_due = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(percentage, amountDue, id);
+      SET percentage = $1, amount_due = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+    `, [percentage, amountDue, id]);
     
-    const updatedPartner = db.prepare(`
+    // جلب معلومات الشريك المحدثة
+    const partnerInfo = await db.getOne(`
       SELECT 
         pp.*,
         p.name as partner_name,
@@ -127,10 +131,10 @@ export async function PUT(request: NextRequest) {
         p.email
       FROM project_partners pp
       JOIN partners p ON pp.partner_id = p.id
-      WHERE pp.id = ?
-    `).get(id);
+      WHERE pp.id = $1
+    `, [id]);
     
-    return NextResponse.json(updatedPartner);
+    return NextResponse.json(partnerInfo);
   } catch (error) {
     console.error('Error updating project partner:', error);
     return NextResponse.json(
