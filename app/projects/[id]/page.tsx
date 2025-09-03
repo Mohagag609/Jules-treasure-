@@ -238,20 +238,33 @@ export default function ProjectDetailsPage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">مراحل المشروع</h3>
-                <button className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                  <Plus className="ml-1 h-4 w-4" />
-                  إضافة مرحلة
-                </button>
+                <div className="flex space-x-2 space-x-reverse">
+                  <Link href="/phases">
+                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200">
+                      عرض كل المراحل
+                    </button>
+                  </Link>
+                  <Link href={`/phases?project_id=${project.id}`}>
+                    <button className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                      <Plus className="ml-1 h-4 w-4" />
+                      إضافة مرحلة
+                    </button>
+                  </Link>
+                </div>
               </div>
               {project.phases.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">لا توجد مراحل مضافة بعد</p>
               ) : (
                 <div className="space-y-3">
                   {project.phases.map((phase) => (
-                    <div key={phase.id} className="border rounded-lg p-4">
+                    <div key={phase.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-medium text-gray-900">{phase.name}</h4>
+                          <Link href={`/projects/${project.id}/phases/${phase.id}`}>
+                            <h4 className="font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                              {phase.name}
+                            </h4>
+                          </Link>
                           <p className="text-sm text-gray-600 mt-1">
                             المطلوب: {formatCurrency(phase.amount_required)} | 
                             المدفوع: {formatCurrency(phase.amount_paid)}
@@ -273,6 +286,18 @@ export default function ProjectDetailsPage() {
                             style={{ width: `${(phase.amount_paid / phase.amount_required) * 100}%` }}
                           ></div>
                         </div>
+                      </div>
+                      <div className="mt-3 flex justify-between">
+                        <Link href={`/projects/${project.id}/phases/${phase.id}`}>
+                          <button className="text-sm text-blue-600 hover:underline">
+                            عرض التفاصيل ←
+                          </button>
+                        </Link>
+                        {phase.suppliers && phase.suppliers.length > 0 && (
+                          <span className="text-xs text-gray-500">
+                            {phase.suppliers.length} موردين
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}

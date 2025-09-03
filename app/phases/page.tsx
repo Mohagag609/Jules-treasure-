@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { 
   Layers, 
   Plus, 
@@ -296,11 +297,17 @@ export default function PhasesPage() {
                 {/* Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{phase.name}</h3>
-                    <p className="text-sm text-gray-500 flex items-center mt-1">
-                      <Building className="ml-1 h-4 w-4" />
-                      {phase.project_name}
-                    </p>
+                    <Link href={`/projects/${phase.project_id}/phases/${phase.id}`}>
+                      <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer">
+                        {phase.name}
+                      </h3>
+                    </Link>
+                    <Link href={`/projects/${phase.project_id}`}>
+                      <p className="text-sm text-gray-500 flex items-center mt-1 hover:text-gray-700">
+                        <Building className="ml-1 h-4 w-4" />
+                        {phase.project_name}
+                      </p>
+                    </Link>
                   </div>
                   {getStatusBadge(phase.status)}
                 </div>
@@ -352,20 +359,27 @@ export default function PhasesPage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex justify-end space-x-2 space-x-reverse pt-3 border-t">
-                  <button 
-                    className="text-yellow-600 hover:text-yellow-900"
-                    title="تعديل"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button 
-                    onClick={() => deletePhase(phase.id)}
-                    className="text-red-600 hover:text-red-900"
-                    title="حذف"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <div className="flex justify-between pt-3 border-t">
+                  <Link href={`/projects/${phase.project_id}/phases/${phase.id}`}>
+                    <button className="text-sm text-blue-600 hover:underline">
+                      عرض التفاصيل ←
+                    </button>
+                  </Link>
+                  <div className="flex space-x-2 space-x-reverse">
+                    <button 
+                      className="text-yellow-600 hover:text-yellow-900"
+                      title="تعديل"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => deletePhase(phase.id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="حذف"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
