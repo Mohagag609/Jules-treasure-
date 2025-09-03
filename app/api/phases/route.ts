@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/database';
+import db from '@/lib/db/postgres';
 
 // POST - إنشاء مرحلة جديدة
 export async function POST(request: NextRequest) {
@@ -14,12 +14,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const result = db.prepare(`
+    const newPhase = await db.insert(`
       INSERT INTO phases (project_id, name, amount_required, amount_paid, status, start_date, end_date)
-      VALUES (?, ?, ?, 0, 'pending', ?, ?)
-    `).run(project_id, name, amount_required, start_date || null, end_date || null);
-    
-    const newPhase = db.prepare('SELECT * FROM phases WHERE id = ?').get(result.lastInsertRowid);
+      VALUES ($1, $2, $3, 0, 'pending', $4, $5)
+    `, [project_id, name, amount_required, start_date || null, end_date || null]);
     
     return NextResponse.json(newPhase, { status: 201 });
   } catch (error) {
@@ -44,15 +42,15 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const phases = db.prepare(`
+    const phases = await db.getMany(`
       SELECT * FROM phases 
-      WHERE project_id = ? 
+      WHERE project_id = $1 
       ORDER BY created_at
-    `).all(projectId) as any[];
+    `, [projectId]);
     
     // جلب الموردين لكل مرحلة
     for (const phase of phases) {
-      const suppliers = db.prepare(`
+      const suppliers = await db.getMany(`
         SELECT 
           ps.*,
           s.name as supplier_name,
@@ -60,8 +58,8 @@ export async function GET(request: NextRequest) {
           s.email
         FROM phase_suppliers ps
         JOIN suppliers s ON ps.supplier_id = s.id
-        WHERE ps.phase_id = ?
-      `).all(phase.id);
+        WHERE ps.phase_id = $1
+      `, [phase.id]);
       
       phase.suppliers = suppliers;
     }
