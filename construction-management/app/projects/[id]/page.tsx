@@ -11,7 +11,8 @@ import {
   Users, 
   Layers,
   Plus,
-  Edit
+  Edit,
+  FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -311,14 +312,31 @@ export default function ProjectDetailsPage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">شركاء المشروع</h3>
-                <button className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                  <Plus className="ml-1 h-4 w-4" />
-                  إضافة شريك
-                </button>
+                <Link href={`/projects/${project.id}/add-partner`}>
+                  <button className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                    <Plus className="ml-1 h-4 w-4" />
+                    إضافة شريك
+                  </button>
+                </Link>
               </div>
               {project.partners.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">لا يوجد شركاء مضافين بعد</p>
               ) : (
+                <>
+                  {/* ملخص النسب */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-blue-900">إجمالي النسب المحجوزة:</span>
+                      <span className={`text-lg font-bold ${totalPartnerPercentage === 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                        {totalPartnerPercentage}%
+                      </span>
+                    </div>
+                    {totalPartnerPercentage < 100 && (
+                      <p className="text-xs text-blue-700 mt-1">
+                        النسبة المتبقية: {100 - totalPartnerPercentage}%
+                      </p>
+                    )}
+                  </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead>
@@ -328,6 +346,7 @@ export default function ProjectDetailsPage() {
                         <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">المستحق</th>
                         <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">المدفوع</th>
                         <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">المتبقي</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -348,11 +367,24 @@ export default function ProjectDetailsPage() {
                           <td className="px-4 py-3 text-sm text-orange-600">
                             {formatCurrency(partner.amount_due - partner.amount_paid)}
                           </td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex space-x-2 space-x-reverse">
+                              <Link href={`/payments/partner?project_id=${project.id}&partner_id=${partner.partner_id}`}>
+                                <button className="text-green-600 hover:text-green-700" title="تسجيل دفعة">
+                                  <DollarSign className="h-4 w-4" />
+                                </button>
+                              </Link>
+                              <button className="text-blue-600 hover:text-blue-700" title="كشف حساب">
+                                <FileText className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             </div>
           )}
