@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الخزينة المتطور</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* السايد بار */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+            position: fixed;
+            right: 0;
+            top: 0;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-header h3 {
+            color: white;
+            margin: 0;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+        
+        .sidebar.collapsed .sidebar-header h3 {
+            font-size: 0;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            padding: 15px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding-right: 30px;
+        }
+        
+        .menu-item.active {
+            background: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+            color: white;
+            border-right: 4px solid #ffd700;
+        }
+        
+        .menu-item i {
+            font-size: 1.3rem;
+            width: 30px;
+            margin-left: 15px;
+            transition: all 0.3s;
+        }
+        
+        .menu-item:hover i {
+            transform: scale(1.2);
+        }
+        
+        .menu-item span {
+            transition: all 0.3s;
+        }
+        
+        .sidebar.collapsed .menu-item span {
+            display: none;
+        }
+        
+        .sidebar.collapsed .menu-item {
+            padding: 15px 20px;
+            justify-content: center;
+        }
+        
+        .sidebar.collapsed .menu-item i {
+            margin: 0;
+        }
+        
+        /* منطقة المحتوى */
+        .main-content {
+            margin-right: 280px;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        .main-content.expanded {
+            margin-right: 70px;
+        }
+        
+        /* الهيدر العلوي */
+        .top-header {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toggle-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .toggle-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* منطقة المحتوى الديناميكي */
+        .content-area {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: calc(100vh - 140px);
+        }
+        
+        /* كروت الإحصائيات */
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .stat-card h5 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card h2 {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stat-card i {
+            font-size: 2.5rem;
+            opacity: 0.3;
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        /* الجداول */
+        .tree-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .tree-node {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .tree-node:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .tree-node.group {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        
+        .tree-children {
+            margin-right: 30px;
+            border-right: 3px solid #667eea;
+            padding-right: 20px;
+            margin-top: 10px;
+        }
+        
+        /* أنيميشن */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .fade-in {
+            animation: slideIn 0.5s ease;
+        }
+        
+        /* الأزرار */
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-gradient:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        /* التنبيهات */
+        .alert-custom {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+        }
+        
+        /* اللودر */
+        .loader {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+        
+        .loader.active {
+            display: block;
+        }
+        
+        /* التولتيب */
+        .tooltip-custom {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar-header h3 {
+                display: none;
+            }
+            
+            .menu-item span {
+                display: none;
+            }
+            
+            .main-content {
+                margin-right: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- السايد بار -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-coins"></i> نظام الخزينة</h3>
+        </div>
+        <div class="sidebar-menu">
+            <a class="menu-item active" onclick="showPage('dashboard')">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a class="menu-item" onclick="showPage('safes')">
+                <i class="fas fa-vault"></i>
+                <span>الخزائن المتدرجة</span>
+            </a>
+            <a class="menu-item" onclick="showPage('customers')">
+                <i class="fas fa-users"></i>
+                <span>العملاء</span>
+            </a>
+            <a class="menu-item" onclick="showPage('suppliers')">
+                <i class="fas fa-truck"></i>
+                <span>الموردين</span>
+            </a>
+            <a class="menu-item" onclick="showPage('vouchers')">
+                <i class="fas fa-file-invoice"></i>
+                <span>السندات</span>
+            </a>
+            <a class="menu-item" onclick="showPage('reports')">
+                <i class="fas fa-chart-bar"></i>
+                <span>التقارير</span>
+            </a>
+            <a class="menu-item" onclick="showPage('settings')">
+                <i class="fas fa-cog"></i>
+                <span>الإعدادات</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content" id="mainContent">
+        <!-- الهيدر العلوي -->
+        <div class="top-header">
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h4 id="pageTitle">لوحة التحكم</h4>
+            <div>
+                <span class="badge bg-success">متصل</span>
+                <span id="currentTime"></span>
+            </div>
+        </div>
+        
+        <!-- منطقة المحتوى -->
+        <div class="content-area fade-in" id="contentArea">
+            <!-- محتوى لوحة التحكم -->
+            <div id="dashboardContent">
+                <h2 class="mb-4">مرحباً بك في نظام الخزينة المتطور</h2>
+                
+                <!-- كروت الإحصائيات -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <h5>إجمالي الخزائن</h5>
+                            <h2 id="totalSafes">0</h2>
+                            <i class="fas fa-vault"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <h5>إجمالي العملاء</h5>
+                            <h2 id="totalCustomers">0</h2>
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <h5>إجمالي الموردين</h5>
+                            <h2 id="totalSuppliers">0</h2>
+                            <i class="fas fa-truck"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <h5>رصيد الخزائن</h5>
+                            <h2 id="totalBalance">0</h2>
+                            <i class="fas fa-money-bill"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- الرسوم البيانية -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="tree-container">
+                            <h5>آخر المعاملات</h5>
+                            <div id="recentTransactions"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="tree-container">
+                            <h5>ملخص الأرصدة</h5>
+                            <canvas id="balanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- محتوى الخزائن -->
+            <div id="safesContent" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>الخزائن المتدرجة</h2>
+                    <button class="btn btn-gradient" onclick="showAddSafeModal()">
+                        <i class="fas fa-plus"></i> إضافة خزينة
+                    </button>
+                </div>
+                <div class="tree-container" id="safesTree">
+                    <!-- سيتم تحميل الخزائن هنا -->
+                </div>
+            </div>
+            
+            <!-- محتوى العملاء -->
+            <div id="customersContent" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>العملاء المتدرجة</h2>
+                    <button class="btn btn-gradient" onclick="showAddCustomerModal()">
+                        <i class="fas fa-plus"></i> إضافة عميل
+                    </button>
+                </div>
+                <div class="tree-container" id="customersTree">
+                    <!-- سيتم تحميل العملاء هنا -->
+                </div>
+            </div>
+            
+            <!-- محتوى الموردين -->
+            <div id="suppliersContent" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>الموردين المتدرجة</h2>
+                    <button class="btn btn-gradient" onclick="showAddSupplierModal()">
+                        <i class="fas fa-plus"></i> إضافة مورد
+                    </button>
+                </div>
+                <div class="tree-container" id="suppliersTree">
+                    <!-- سيتم تحميل الموردين هنا -->
+                </div>
+            </div>
+            
+            <!-- محتوى السندات -->
+            <div id="vouchersContent" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>السندات</h2>
+                    <button class="btn btn-gradient" onclick="showAddVoucherModal()">
+                        <i class="fas fa-plus"></i> إضافة سند
+                    </button>
+                </div>
+                <div class="tree-container">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم السند</th>
+                                <th>النوع</th>
+                                <th>التاريخ</th>
+                                <th>المبلغ</th>
+                                <th>الوصف</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vouchersTable">
+                            <!-- سيتم تحميل السندات هنا -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- محتوى التقارير -->
+            <div id="reportsContent" style="display:none;">
+                <h2>التقارير</h2>
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="tree-container text-center">
+                            <i class="fas fa-file-pdf fa-3x mb-3 text-danger"></i>
+                            <h5>تقرير الخزائن</h5>
+                            <button class="btn btn-gradient mt-2">تصدير PDF</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="tree-container text-center">
+                            <i class="fas fa-file-excel fa-3x mb-3 text-success"></i>
+                            <h5>كشف حساب العملاء</h5>
+                            <button class="btn btn-gradient mt-2">تصدير Excel</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="tree-container text-center">
+                            <i class="fas fa-chart-line fa-3x mb-3 text-info"></i>
+                            <h5>تقرير الأرباح والخسائر</h5>
+                            <button class="btn btn-gradient mt-2">عرض التقرير</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- محتوى الإعدادات -->
+            <div id="settingsContent" style="display:none;">
+                <h2>الإعدادات</h2>
+                <div class="tree-container">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">اسم الشركة</label>
+                            <input type="text" class="form-control" value="نظام الخزينة المتطور">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العملة</label>
+                            <select class="form-select">
+                                <option>جنيه مصري (EGP)</option>
+                                <option>دولار أمريكي (USD)</option>
+                                <option>ريال سعودي (SAR)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">اللغة</label>
+                            <select class="form-select">
+                                <option>العربية</option>
+                                <option>English</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-gradient">حفظ الإعدادات</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- اللودر -->
+    <div class="loader" id="loader">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+    </div>
+    
+    <!-- Modal إضافة خزينة -->
+    <div class="modal fade" id="addSafeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">إضافة خزينة جديدة</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSafeForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم الخزينة</label>
+                            <input type="text" class="form-control" id="safeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الخزينة الأم (اختياري)</label>
+                            <select class="form-select" id="parentSafe">
+                                <option value="">-- خزينة رئيسية --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isContainer">
+                                <label class="form-check-label" for="isContainer">
+                                    خزينة حاوية (لا تقبل معاملات مباشرة)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSafe()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal إضافة عميل -->
+    <div class="modal fade" id="addCustomerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">إضافة عميل جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCustomerForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم العميل</label>
+                            <input type="text" class="form-control" id="customerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="customerPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العنوان</label>
+                            <textarea class="form-control" id="customerAddress" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الشركة/العميل الرئيسي (اختياري)</label>
+                            <select class="form-select" id="parentCustomer">
+                                <option value="">-- عميل رئيسي --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isCustomerGroup">
+                                <label class="form-check-label" for="isCustomerGroup">
+                                    شركة/مجموعة (لها فروع)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" onclick="saveCustomer()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal إضافة مورد -->
+    <div class="modal fade" id="addSupplierModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">إضافة مورد جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSupplierForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم المورد</label>
+                            <input type="text" class="form-control" id="supplierName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="supplierPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">العنوان</label>
+                            <textarea class="form-control" id="supplierAddress" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الشركة/المورد الرئيسي (اختياري)</label>
+                            <select class="form-select" id="parentSupplier">
+                                <option value="">-- مورد رئيسي --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isSupplierGroup">
+                                <label class="form-check-label" for="isSupplierGroup">
+                                    شركة/مجموعة (لها فروع)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-warning" onclick="saveSupplier()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal إضافة سند -->
+    <div class="modal fade" id="addVoucherModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">إضافة سند جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addVoucherForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">نوع السند</label>
+                                    <select class="form-select" id="voucherType" onchange="updateVoucherForm()">
+                                        <option value="receipt">سند قبض</option>
+                                        <option value="payment">سند صرف</option>
+                                        <option value="transfer">تحويل بين خزائن</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">المبلغ</label>
+                                    <input type="number" class="form-control" id="voucherAmount" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">الخزينة</label>
+                                    <select class="form-select" id="voucherSafe" required>
+                                        <option value="">اختر الخزينة</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="entitySection">
+                                <div class="mb-3">
+                                    <label class="form-label" id="entityLabel">العميل</label>
+                                    <select class="form-select" id="voucherEntity">
+                                        <option value="">اختر</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الوصف</label>
+                            <textarea class="form-control" id="voucherDescription" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-info text-white" onclick="saveVoucher()">حفظ السند</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // متغيرات عامة
+        let currentPage = 'dashboard';
+        let safesData = [];
+        let customersData = [];
+        let suppliersData = [];
+        let vouchersData = [];
+        
+        // تهيئة التطبيق
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            loadDashboard();
+        });
+        
+        // تحديث الوقت
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('ar-EG');
+        }
+        
+        // تبديل السايد بار
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+        
+        // عرض الصفحة
+        function showPage(page) {
+            // إخفاء جميع المحتويات
+            document.querySelectorAll('[id$="Content"]').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // إزالة active من جميع القوائم
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // تفعيل القائمة الحالية
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // عرض المحتوى المطلوب
+            const contentId = page + 'Content';
+            const content = document.getElementById(contentId);
+            if (content) {
+                content.style.display = 'block';
+                content.classList.add('fade-in');
+            }
+            
+            // تحديث العنوان
+            const titles = {
+                'dashboard': 'لوحة التحكم',
+                'safes': 'الخزائن المتدرجة',
+                'customers': 'العملاء',
+                'suppliers': 'الموردين',
+                'vouchers': 'السندات',
+                'reports': 'التقارير',
+                'settings': 'الإعدادات'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || 'نظام الخزينة';
+            
+            // تحميل البيانات حسب الصفحة
+            switch(page) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'safes':
+                    loadSafes();
+                    break;
+                case 'customers':
+                    loadCustomers();
+                    break;
+                case 'suppliers':
+                    loadSuppliers();
+                    break;
+                case 'vouchers':
+                    loadVouchers();
+                    break;
+            }
+            
+            currentPage = page;
+        }
+        
+        // تحميل لوحة التحكم
+        async function loadDashboard() {
+            try {
+                // تحميل الإحصائيات
+                const [safesRes, customersRes, suppliersRes] = await Promise.all([
+                    fetch('/api/safes/tree'),
+                    fetch('/api/customers/tree'),
+                    fetch('/api/suppliers/tree')
+                ]);
+                
+                const safes = await safesRes.json();
+                const customers = await customersRes.json();
+                const suppliers = await suppliersRes.json();
+                
+                // تحديث الإحصائيات
+                document.getElementById('totalSafes').textContent = countItems(safes);
+                document.getElementById('totalCustomers').textContent = countItems(customers);
+                document.getElementById('totalSuppliers').textContent = countItems(suppliers);
+                document.getElementById('totalBalance').textContent = formatMoney(calculateTotal(safes));
+                
+                // تحميل آخر المعاملات
+                loadRecentTransactions();
+                
+                // رسم الرسم البياني
+                drawBalanceChart();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        // تحميل الخزائن
+        async function loadSafes() {
+            showLoader();
+            try {
+                const response = await fetch('/api/safes/tree');
+                safesData = await response.json();
+                renderSafesTree();
+            } catch (error) {
+                console.error('Error loading safes:', error);
+            }
+            hideLoader();
+        }
+        
+        // تحميل العملاء
+        async function loadCustomers() {
+            showLoader();
+            try {
+                const response = await fetch('/api/customers/tree');
+                customersData = await response.json();
+                renderCustomersTree();
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+            hideLoader();
+        }
+        
+        // تحميل الموردين
+        async function loadSuppliers() {
+            showLoader();
+            try {
+                const response = await fetch('/api/suppliers/tree');
+                suppliersData = await response.json();
+                renderSuppliersTree();
+            } catch (error) {
+                console.error('Error loading suppliers:', error);
+            }
+            hideLoader();
+        }
+        
+        // تحميل السندات
+        async function loadVouchers() {
+            showLoader();
+            try {
+                const response = await fetch('/api/vouchers?limit=50');
+                vouchersData = await response.json();
+                renderVouchersTable();
+            } catch (error) {
+                console.error('Error loading vouchers:', error);
+            }
+            hideLoader();
+        }
+        
+        // عرض شجرة الخزائن
+        function renderSafesTree() {
+            const container = document.getElementById('safesTree');
+            container.innerHTML = '';
+            
+            safesData.forEach(safe => {
+                container.appendChild(createTreeNode(safe, 'safe'));
+            });
+        }
+        
+        // عرض شجرة العملاء
+        function renderCustomersTree() {
+            const container = document.getElementById('customersTree');
+            container.innerHTML = '';
+            
+            customersData.forEach(customer => {
+                container.appendChild(createTreeNode(customer, 'customer'));
+            });
+        }
+        
+        // عرض شجرة الموردين
+        function renderSuppliersTree() {
+            const container = document.getElementById('suppliersTree');
+            container.innerHTML = '';
+            
+            suppliersData.forEach(supplier => {
+                container.appendChild(createTreeNode(supplier, 'supplier'));
+            });
+        }
+        
+        // إنشاء عقدة الشجرة
+        function createTreeNode(item, type) {
+            const node = document.createElement('div');
+            node.className = `tree-node ${item.is_container || item.is_group ? 'group' : ''}`;
+            
+            const hasChildren = (item.children || item.branches || []).length > 0;
+            const icon = type === 'safe' ? 'fa-vault' : type === 'customer' ? 'fa-user' : 'fa-truck';
+            
+            node.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        ${hasChildren ? `<i class="fas fa-chevron-down me-2" onclick="toggleChildren(this)"></i>` : ''}
+                        <i class="fas ${icon} me-2"></i>
+                        <strong>${item.name}</strong>
+                        ${item.is_container || item.is_group ? '<span class="badge bg-warning ms-2">مجموعة</span>' : ''}
+                    </div>
+                    <div>
+                        <span class="badge bg-${item.balance >= 0 ? 'success' : 'danger'}">
+                            ${formatMoney(item.balance)}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            // إضافة الأطفال
+            if (hasChildren) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'tree-children';
+                
+                const children = item.children || item.branches || [];
+                children.forEach(child => {
+                    childrenContainer.appendChild(createTreeNode(child, type));
+                });
+                
+                node.appendChild(childrenContainer);
+            }
+            
+            return node;
+        }
+        
+        // عرض جدول السندات
+        function renderVouchersTable() {
+            const tbody = document.getElementById('vouchersTable');
+            tbody.innerHTML = '';
+            
+            vouchersData.forEach(voucher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${voucher.voucher_number}</td>
+                    <td>
+                        <span class="badge bg-${voucher.voucher_type === 'receipt' ? 'success' : 'danger'}">
+                            ${voucher.voucher_type === 'receipt' ? 'قبض' : 'صرف'}
+                        </span>
+                    </td>
+                    <td>${new Date(voucher.date).toLocaleDateString('ar-EG')}</td>
+                    <td>${formatMoney(voucher.amount)}</td>
+                    <td>${voucher.description || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // تحميل آخر المعاملات
+        async function loadRecentTransactions() {
+            try {
+                const response = await fetch('/api/vouchers?limit=5');
+                const vouchers = await response.json();
+                
+                const container = document.getElementById('recentTransactions');
+                container.innerHTML = '';
+                
+                vouchers.forEach(v => {
+                    const item = document.createElement('div');
+                    item.className = 'p-2 border-bottom';
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <span>${v.voucher_number}</span>
+                            <span class="badge bg-${v.voucher_type === 'receipt' ? 'success' : 'danger'}">
+                                ${formatMoney(v.amount)}
+                            </span>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error loading recent transactions:', error);
+            }
+        }
+        
+        // رسم الرسم البياني
+        function drawBalanceChart() {
+            const ctx = document.getElementById('balanceChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['الخزائن', 'العملاء', 'الموردين'],
+                    datasets: [{
+                        data: [30000, 20000, 15000],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(67, 233, 123, 0.8)',
+                            'rgba(250, 112, 154, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        // دوال مساعدة
+        function toggleChildren(element) {
+            const children = element.closest('.tree-node').querySelector('.tree-children');
+            if (children) {
+                children.style.display = children.style.display === 'none' ? 'block' : 'none';
+                element.classList.toggle('fa-chevron-down');
+                element.classList.toggle('fa-chevron-left');
+            }
+        }
+        
+        function countItems(items) {
+            let count = 0;
+            items.forEach(item => {
+                count++;
+                if (item.children || item.branches) {
+                    count += countItems(item.children || item.branches);
+                }
+            });
+            return count;
+        }
+        
+        function calculateTotal(items) {
+            let total = 0;
+            items.forEach(item => {
+                total += item.balance || 0;
+            });
+            return total;
+        }
+        
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP'
+            }).format(amount || 0);
+        }
+        
+        function showLoader() {
+            document.getElementById('loader').classList.add('active');
+        }
+        
+        function hideLoader() {
+            document.getElementById('loader').classList.remove('active');
+        }
+        
+        // دوال إضافة
+        function showAddSafeModal() {
+            loadParentSafes();
+            const modal = new bootstrap.Modal(document.getElementById('addSafeModal'));
+            modal.show();
+        }
+        
+        function showAddCustomerModal() {
+            loadParentCustomers();
+            const modal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
+            modal.show();
+        }
+        
+        function showAddSupplierModal() {
+            loadParentSuppliers();
+            const modal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+            modal.show();
+        }
+        
+        function showAddVoucherModal() {
+            loadVoucherFormData();
+            const modal = new bootstrap.Modal(document.getElementById('addVoucherModal'));
+            modal.show();
+        }
+        
+        // حفظ خزينة
+        async function saveSafe() {
+            const name = document.getElementById('safeName').value;
+            const parentId = document.getElementById('parentSafe').value;
+            const isContainer = document.getElementById('isContainer').checked;
+            
+            if (!name) {
+                alert('يرجى إدخال اسم الخزينة');
+                return;
+            }
+            
+            const data = {
+                name: name,
+                parent_safe_id: parentId ? parseInt(parentId) : null,
+                is_container: isContainer,
+                type: parentId ? 'sub-branch' : 'main'
+            };
+            
+            try {
+                const response = await fetch('/api/safes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addSafeModal')).hide();
+                    document.getElementById('addSafeForm').reset();
+                    loadSafes();
+                    showMessage('تم إضافة الخزينة بنجاح', 'success');
+                }
+            } catch (error) {
+                showMessage('خطأ في الاتصال', 'danger');
+            }
+        }
+        
+        // حفظ عميل
+        async function saveCustomer() {
+            const name = document.getElementById('customerName').value;
+            const phone = document.getElementById('customerPhone').value;
+            const address = document.getElementById('customerAddress').value;
+            const parentId = document.getElementById('parentCustomer').value;
+            const isGroup = document.getElementById('isCustomerGroup').checked;
+            
+            if (!name) {
+                alert('يرجى إدخال اسم العميل');
+                return;
+            }
+            
+            const data = {
+                name: name,
+                phone: phone,
+                address: address,
+                parent_customer_id: parentId ? parseInt(parentId) : null,
+                is_group: isGroup
+            };
+            
+            try {
+                const response = await fetch('/api/customers', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addCustomerModal')).hide();
+                    document.getElementById('addCustomerForm').reset();
+                    loadCustomers();
+                    showMessage('تم إضافة العميل بنجاح', 'success');
+                }
+            } catch (error) {
+                showMessage('خطأ في الاتصال', 'danger');
+            }
+        }
+        
+        // حفظ مورد
+        async function saveSupplier() {
+            const name = document.getElementById('supplierName').value;
+            const phone = document.getElementById('supplierPhone').value;
+            const address = document.getElementById('supplierAddress').value;
+            const parentId = document.getElementById('parentSupplier').value;
+            const isGroup = document.getElementById('isSupplierGroup').checked;
+            
+            if (!name) {
+                alert('يرجى إدخال اسم المورد');
+                return;
+            }
+            
+            const data = {
+                name: name,
+                phone: phone,
+                address: address,
+                parent_supplier_id: parentId ? parseInt(parentId) : null,
+                is_group: isGroup
+            };
+            
+            try {
+                const response = await fetch('/api/suppliers', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addSupplierModal')).hide();
+                    document.getElementById('addSupplierForm').reset();
+                    loadSuppliers();
+                    showMessage('تم إضافة المورد بنجاح', 'success');
+                }
+            } catch (error) {
+                showMessage('خطأ في الاتصال', 'danger');
+            }
+        }
+        
+        // حفظ سند
+        async function saveVoucher() {
+            const type = document.getElementById('voucherType').value;
+            const amount = document.getElementById('voucherAmount').value;
+            const safeId = document.getElementById('voucherSafe').value;
+            const entityId = document.getElementById('voucherEntity').value;
+            const description = document.getElementById('voucherDescription').value;
+            
+            if (!amount || !safeId) {
+                alert('يرجى ملء الحقول المطلوبة');
+                return;
+            }
+            
+            let data = {
+                voucher_type: type,
+                amount: parseFloat(amount),
+                description: description
+            };
+            
+            if (type === 'receipt') {
+                data.safe_to_id = parseInt(safeId);
+                if (entityId) data.customer_id = parseInt(entityId);
+            } else if (type === 'payment') {
+                data.safe_from_id = parseInt(safeId);
+                if (entityId) data.supplier_id = parseInt(entityId);
+            }
+            
+            try {
+                const response = await fetch('/api/vouchers', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addVoucherModal')).hide();
+                    document.getElementById('addVoucherForm').reset();
+                    loadVouchers();
+                    loadDashboard();
+                    showMessage('تم إضافة السند بنجاح', 'success');
+                }
+            } catch (error) {
+                showMessage('خطأ في الاتصال', 'danger');
+            }
+        }
+        
+        // تحميل البيانات للقوائم المنسدلة
+        function loadParentSafes() {
+            const select = document.getElementById('parentSafe');
+            select.innerHTML = '<option value="">-- خزينة رئيسية --</option>';
+            
+            safesData.forEach(safe => {
+                if (safe.is_container) {
+                    const option = document.createElement('option');
+                    option.value = safe.id;
+                    option.textContent = safe.name;
+                    select.appendChild(option);
+                }
+            });
+        }
+        
+        function loadParentCustomers() {
+            const select = document.getElementById('parentCustomer');
+            select.innerHTML = '<option value="">-- عميل رئيسي --</option>';
+            
+            customersData.forEach(customer => {
+                if (customer.is_group) {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    select.appendChild(option);
+                }
+            });
+        }
+        
+        function loadParentSuppliers() {
+            const select = document.getElementById('parentSupplier');
+            select.innerHTML = '<option value="">-- مورد رئيسي --</option>';
+            
+            suppliersData.forEach(supplier => {
+                if (supplier.is_group) {
+                    const option = document.createElement('option');
+                    option.value = supplier.id;
+                    option.textContent = supplier.name;
+                    select.appendChild(option);
+                }
+            });
+        }
+        
+        async function loadVoucherFormData() {
+            // تحميل الخزائن
+            const safeSelect = document.getElementById('voucherSafe');
+            safeSelect.innerHTML = '<option value="">اختر الخزينة</option>';
+            
+            safesData.forEach(safe => {
+                if (!safe.is_container) {
+                    const option = document.createElement('option');
+                    option.value = safe.id;
+                    option.textContent = safe.name;
+                    safeSelect.appendChild(option);
+                }
+            });
+            
+            // تحميل العملاء/الموردين حسب نوع السند
+            updateVoucherForm();
+        }
+        
+        function updateVoucherForm() {
+            const type = document.getElementById('voucherType').value;
+            const entityLabel = document.getElementById('entityLabel');
+            const entitySelect = document.getElementById('voucherEntity');
+            
+            entitySelect.innerHTML = '<option value="">اختر</option>';
+            
+            if (type === 'receipt') {
+                entityLabel.textContent = 'العميل';
+                customersData.forEach(customer => {
+                    if (!customer.is_group) {
+                        const option = document.createElement('option');
+                        option.value = customer.id;
+                        option.textContent = customer.name;
+                        entitySelect.appendChild(option);
+                    }
+                });
+            } else if (type === 'payment') {
+                entityLabel.textContent = 'المورد';
+                suppliersData.forEach(supplier => {
+                    if (!supplier.is_group) {
+                        const option = document.createElement('option');
+                        option.value = supplier.id;
+                        option.textContent = supplier.name;
+                        entitySelect.appendChild(option);
+                    }
+                });
+            } else {
+                document.getElementById('entitySection').style.display = 'none';
+            }
+        }
+        
+        // عرض رسالة
+        function showMessage(text, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alert.style.zIndex = '9999';
+            alert.textContent = text;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
