@@ -9,12 +9,18 @@ Base = declarative_base()
 
 # Database configuration
 DATABASE_URL = os.environ.get('DATABASE_URL')
+
+# Fix for Render's PostgreSQL URL format
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-elif not DATABASE_URL:
-    DATABASE_URL = "sqlite:///treasury.db"
 
-engine = create_engine(DATABASE_URL)
+# Use SQLite for local development if DATABASE_URL is not set
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///treasury.db"
+    engine = create_engine(DATABASE_URL)
+else:
+    # For PostgreSQL on Render
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # نموذج العملاء

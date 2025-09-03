@@ -1,18 +1,27 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
 from sqlalchemy.orm import Session
+import sys
+import os
+
+# Add the current directory to Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from database import *
 from datetime import datetime, timedelta
 import json
 import io
-# التقارير PDF و Excel سيتم إضافتها لاحقاً
-import os
 
 app = Flask(__name__)
 CORS(app)
 
 # Initialize database on startup
-init_db()
+try:
+    init_db()
+    print("Database initialized successfully")
+except Exception as e:
+    print(f"Warning: Database initialization error: {e}")
+    # Continue anyway, database might already be initialized
 
 # الصفحة الرئيسية
 @app.route('/')
