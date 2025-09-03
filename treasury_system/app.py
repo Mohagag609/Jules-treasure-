@@ -119,7 +119,7 @@ def handle_customers():
         db.close()
         return jsonify(result), 201
 
-@app.route('/api/customers/<int:customer_id>', methods=['PUT', 'DELETE'])
+@app.route('/api/customers/<int:customer_id>', methods=['GET', 'PUT', 'DELETE'])
 def handle_customer(customer_id):
     db = SessionLocal()
     customer = db.query(Customer).filter_by(id=customer_id).first()
@@ -128,20 +128,50 @@ def handle_customer(customer_id):
         db.close()
         return jsonify({'error': 'Customer not found'}), 404
     
-    if request.method == 'PUT':
+    if request.method == 'GET':
+        result = {
+            'id': customer.id,
+            'name': customer.name,
+            'phone': customer.phone,
+            'address': customer.address,
+            'balance': get_previous_balance('customer', customer.id),
+            'parent_customer_id': customer.parent_customer_id,
+            'is_group': customer.is_group,
+            'level': customer.level
+        }
+        db.close()
+        return jsonify(result)
+    
+    elif request.method == 'PUT':
         data = request.json
         customer.name = data.get('name', customer.name)
         customer.phone = data.get('phone', customer.phone)
         customer.address = data.get('address', customer.address)
+        customer.parent_customer_id = data.get('parent_customer_id')
+        customer.is_group = data.get('is_group', customer.is_group)
         db.commit()
+        db.refresh(customer)
+        result = {
+            'id': customer.id,
+            'name': customer.name,
+            'phone': customer.phone,
+            'address': customer.address,
+            'balance': get_previous_balance('customer', customer.id)
+        }
         db.close()
-        return jsonify({'message': 'Customer updated successfully'})
+        return jsonify(result)
     
     elif request.method == 'DELETE':
+        # Check if customer has transactions
+        voucher_count = db.query(Voucher).filter_by(customer_id=customer_id).count()
+        if voucher_count > 0:
+            db.close()
+            return jsonify({'error': 'لا يمكن حذف العميل لوجود معاملات مرتبطة'}), 400
+        
         db.delete(customer)
         db.commit()
         db.close()
-        return jsonify({'message': 'Customer deleted successfully'})
+        return jsonify({'message': 'تم حذف العميل بنجاح'})
 
 # ============= الموردين =============
 @app.route('/api/suppliers', methods=['GET', 'POST'])
@@ -219,6 +249,60 @@ def handle_suppliers():
         db.close()
         return jsonify(result), 201
 
+@app.route('/api/suppliers/<int:supplier_id>', methods=['GET', 'PUT', 'DELETE'])
+def handle_supplier(supplier_id):
+    db = SessionLocal()
+    supplier = db.query(Supplier).filter_by(id=supplier_id).first()
+    
+    if not supplier:
+        db.close()
+        return jsonify({'error': 'Supplier not found'}), 404
+    
+    if request.method == 'GET':
+        result = {
+            'id': supplier.id,
+            'name': supplier.name,
+            'phone': supplier.phone,
+            'address': supplier.address,
+            'balance': get_previous_balance('supplier', supplier.id),
+            'parent_supplier_id': supplier.parent_supplier_id,
+            'is_group': supplier.is_group,
+            'level': supplier.level
+        }
+        db.close()
+        return jsonify(result)
+    
+    elif request.method == 'PUT':
+        data = request.json
+        supplier.name = data.get('name', supplier.name)
+        supplier.phone = data.get('phone', supplier.phone)
+        supplier.address = data.get('address', supplier.address)
+        supplier.parent_supplier_id = data.get('parent_supplier_id')
+        supplier.is_group = data.get('is_group', supplier.is_group)
+        db.commit()
+        db.refresh(supplier)
+        result = {
+            'id': supplier.id,
+            'name': supplier.name,
+            'phone': supplier.phone,
+            'address': supplier.address,
+            'balance': get_previous_balance('supplier', supplier.id)
+        }
+        db.close()
+        return jsonify(result)
+    
+    elif request.method == 'DELETE':
+        # Check if supplier has transactions
+        voucher_count = db.query(Voucher).filter_by(supplier_id=supplier_id).count()
+        if voucher_count > 0:
+            db.close()
+            return jsonify({'error': 'لا يمكن حذف المورد لوجود معاملات مرتبطة'}), 400
+        
+        db.delete(supplier)
+        db.commit()
+        db.close()
+        return jsonify({'message': 'تم حذف المورد بنجاح'})
+
 # ============= الخزائن =============
 @app.route('/api/safes', methods=['GET', 'POST'])
 def handle_safes():
@@ -295,6 +379,78 @@ def handle_safes():
         }
         db.close()
         return jsonify(result), 201
+
+@app.route('/api/safes/<int:safe_id>', methods=['GET', 'PUT', 'DELETE'])
+def handle_safe(safe_id):
+    db = SessionLocal()
+    safe = db.query(Safe).filter_by(id=safe_id).first()
+    
+    if not safe:
+        db.close()
+        return jsonify({'error': 'Safe not found'}), 404
+    
+    if request.method == 'GET':
+        if safe.is_container:
+            balance = get_container_safe_balance(safe.id)
+        else:
+            balance = get_previous_balance('safe', safe.id)
+        
+        result = {
+            'id': safe.id,
+            'name': safe.name,
+            'type': safe.type,
+            'balance': balance,
+            'is_main': safe.is_main,
+            'parent_safe_id': safe.parent_safe_id,
+            'is_container': safe.is_container,
+            'level': safe.level
+        }
+        db.close()
+        return jsonify(result)
+    
+    elif request.method == 'PUT':
+        data = request.json
+        safe.name = data.get('name', safe.name)
+        safe.type = data.get('type', safe.type)
+        safe.is_main = data.get('is_main', safe.is_main)
+        safe.parent_safe_id = data.get('parent_safe_id')
+        safe.is_container = data.get('is_container', safe.is_container)
+        db.commit()
+        db.refresh(safe)
+        
+        if safe.is_container:
+            balance = get_container_safe_balance(safe.id)
+        else:
+            balance = get_previous_balance('safe', safe.id)
+        
+        result = {
+            'id': safe.id,
+            'name': safe.name,
+            'type': safe.type,
+            'balance': balance
+        }
+        db.close()
+        return jsonify(result)
+    
+    elif request.method == 'DELETE':
+        # Check if safe has children
+        children_count = db.query(Safe).filter_by(parent_safe_id=safe_id).count()
+        if children_count > 0:
+            db.close()
+            return jsonify({'error': 'لا يمكن حذف الخزينة لوجود خزائن فرعية'}), 400
+        
+        # Check if safe has transactions
+        voucher_count = db.query(Voucher).filter(
+            (Voucher.safe_from_id == safe_id) | (Voucher.safe_to_id == safe_id)
+        ).count()
+        if voucher_count > 0:
+            db.close()
+            return jsonify({'error': 'لا يمكن حذف الخزينة لوجود معاملات مرتبطة'}), 400
+        
+        db.delete(safe)
+        db.commit()
+        db.close()
+        return jsonify({'message': 'تم حذف الخزينة بنجاح'})
 
 # ============= الخزائن الهرمية =============
 @app.route('/api/safes/tree')
@@ -437,6 +593,59 @@ def validate_safe_transaction():
     
     db.close()
     return jsonify({'valid': True, 'message': 'يمكن إجراء المعاملة'})
+
+# ============= السندات =============
+@app.route('/api/vouchers/<int:voucher_id>', methods=['GET', 'PUT', 'DELETE'])
+def handle_voucher(voucher_id):
+    db = SessionLocal()
+    voucher = db.query(Voucher).filter_by(id=voucher_id).first()
+    
+    if not voucher:
+        db.close()
+        return jsonify({'error': 'Voucher not found'}), 404
+    
+    if request.method == 'GET':
+        result = {
+            'id': voucher.id,
+            'voucher_number': voucher.voucher_number,
+            'voucher_type': voucher.voucher_type,
+            'amount': voucher.amount,
+            'date': voucher.date.isoformat(),
+            'description': voucher.description,
+            'customer_id': voucher.customer_id,
+            'supplier_id': voucher.supplier_id,
+            'safe_from_id': voucher.safe_from_id,
+            'safe_to_id': voucher.safe_to_id
+        }
+        
+        # Add related entities
+        if voucher.customer:
+            result['customer'] = {'id': voucher.customer.id, 'name': voucher.customer.name}
+        if voucher.supplier:
+            result['supplier'] = {'id': voucher.supplier.id, 'name': voucher.supplier.name}
+        
+        db.close()
+        return jsonify(result)
+    
+    elif request.method == 'PUT':
+        data = request.json
+        voucher.amount = data.get('amount', voucher.amount)
+        voucher.description = data.get('description', voucher.description)
+        db.commit()
+        db.refresh(voucher)
+        result = {
+            'id': voucher.id,
+            'voucher_number': voucher.voucher_number,
+            'amount': voucher.amount
+        }
+        db.close()
+        return jsonify(result)
+    
+    elif request.method == 'DELETE':
+        db.delete(voucher)
+        db.commit()
+        db.close()
+        return jsonify({'message': 'تم حذف السند بنجاح'})
 
 # ============= الفئات =============
 @app.route('/api/categories', methods=['GET', 'POST'])
