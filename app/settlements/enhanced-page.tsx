@@ -12,7 +12,8 @@ import {
   Calculator,
   FileText,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
