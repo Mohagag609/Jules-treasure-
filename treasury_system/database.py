@@ -8,23 +8,25 @@ import sqlite3
 Base = declarative_base()
 
 # Database configuration
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.environ.get('DATABASE_URL', 
+    'postgresql://neondb_owner:npg_gP3a1ldnEBeb@ep-bold-butterfly-adx98o9c-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require'
+)
 
-# Fix for Render's PostgreSQL URL format and use pg8000
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    # Convert to pg8000 format
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
-elif DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
-    # Convert to pg8000 format
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
+# Fix for postgres:// URLs (convert to postgresql://)
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Use SQLite for local development if DATABASE_URL is not set
-if not DATABASE_URL:
-    DATABASE_URL = "sqlite:///treasury.db"
+# Create engine with appropriate settings
+if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL)
 else:
-    # For PostgreSQL on Render with pg8000
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
+    # For PostgreSQL (Neon or other)
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        connect_args={"sslmode": "require"}
+    )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # نموذج العملاء
