@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الخزينة الذكي</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+            --sidebar-width: 260px;
+            --sidebar-collapsed: 80px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-logo i {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 0.75rem;
+        }
+        
+        .sidebar-logo span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar.collapsed .sidebar-logo span {
+            opacity: 0;
+            width: 0;
+        }
+        
+        .sidebar-menu {
+            padding: 1rem 0;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+        
+        .menu-item {
+            position: relative;
+            margin: 0.25rem 0.75rem;
+        }
+        
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 0.75rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1));
+            transition: width 0.3s;
+        }
+        
+        .menu-link:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #fff;
+            transform: translateX(-5px);
+        }
+        
+        .menu-link:hover::before {
+            width: 100%;
+        }
+        
+        .menu-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .menu-icon {
+            font-size: 1.25rem;
+            width: 2rem;
+            text-align: center;
+            margin-left: 0.75rem;
+        }
+        
+        .menu-text {
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar.collapsed .menu-text {
+            opacity: 0;
+            width: 0;
+        }
+        
+        .menu-badge {
+            margin-right: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
+        }
+        
+        .sidebar.collapsed .menu-badge {
+            display: none;
+        }
+        
+        /* Main Content */
+        .main-wrapper {
+            margin-right: var(--sidebar-width);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+        }
+        
+        .main-wrapper.expanded {
+            margin-right: var(--sidebar-collapsed);
+        }
+        
+        /* Top Bar */
+        .topbar {
+            background: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .menu-toggle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .menu-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+        
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .topbar-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .topbar-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.625rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 1rem;
+        }
+        
+        /* Content Area */
+        .content {
+            padding: 1.5rem;
+        }
+        
+        .page-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Cards */
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-icon.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stat-icon.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .stat-icon.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .stat-icon.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        .stat-change {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+        }
+        
+        .stat-change.up {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .stat-change.down {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        /* Modern Table */
+        .modern-table {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .table-header {
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .table {
+            margin: 0;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .table td {
+            padding: 1rem;
+            color: #475569;
+            border: none;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        /* Tree View */
+        .tree-item {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .tree-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(-5px);
+        }
+        
+        .tree-item.parent {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-right: 4px solid #0ea5e9;
+        }
+        
+        .tree-children {
+            margin-right: 2rem;
+            margin-top: 0.75rem;
+            padding-right: 1rem;
+            border-right: 2px dashed #cbd5e1;
+        }
+        
+        /* Buttons */
+        .btn-modern {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-success-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: var(--sidebar-collapsed);
+            }
+            
+            .main-wrapper {
+                margin-right: var(--sidebar-collapsed);
+            }
+            
+            .sidebar-logo span,
+            .menu-text,
+            .menu-badge {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="sidebar-logo">
+                <i class="fas fa-wallet"></i>
+                <span>نظام الخزينة</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="menu-item">
+                <a href="#" class="menu-link active" data-page="dashboard">
+                    <i class="fas fa-home menu-icon"></i>
+                    <span class="menu-text">الرئيسية</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="safes">
+                    <i class="fas fa-vault menu-icon"></i>
+                    <span class="menu-text">الخزائن</span>
+                    <span class="menu-badge">3</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="customers">
+                    <i class="fas fa-users menu-icon"></i>
+                    <span class="menu-text">العملاء</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="suppliers">
+                    <i class="fas fa-truck menu-icon"></i>
+                    <span class="menu-text">الموردين</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="vouchers">
+                    <i class="fas fa-file-invoice menu-icon"></i>
+                    <span class="menu-text">السندات</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="reports">
+                    <i class="fas fa-chart-bar menu-icon"></i>
+                    <span class="menu-text">التقارير</span>
+                </a>
+            </div>
+            
+            <div class="menu-item">
+                <a href="#" class="menu-link" data-page="settings">
+                    <i class="fas fa-cog menu-icon"></i>
+                    <span class="menu-text">الإعدادات</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-wrapper" id="mainWrapper">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
+            </div>
+            
+            <div class="topbar-right">
+                <div class="topbar-item">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="topbar-item">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">5</span>
+                </div>
+                <div class="topbar-item">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Dashboard Page -->
+            <div class="page-content active" id="dashboard-page">
+                <!-- Stats Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change up">+12%</span>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="stat-value" id="totalBalance">0</div>
+                            <div class="stat-label">إجمالي الرصيد</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change up">+8%</span>
+                            <div class="stat-icon success">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-value" id="totalCustomers">0</div>
+                            <div class="stat-label">العملاء</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change down">-3%</span>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="stat-value" id="totalSuppliers">0</div>
+                            <div class="stat-label">الموردين</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <span class="stat-change up">+25%</span>
+                            <div class="stat-icon danger">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-value" id="totalVouchers">0</div>
+                            <div class="stat-label">السندات</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="row g-3">
+                    <div class="col-lg-8">
+                        <div class="modern-table">
+                            <div class="table-header">
+                                <h3 class="table-title">آخر المعاملات</h3>
+                                <button class="btn btn-sm btn-primary-gradient">
+                                    <i class="fas fa-plus"></i> إضافة
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>الرقم</th>
+                                            <th>النوع</th>
+                                            <th>المبلغ</th>
+                                            <th>التاريخ</th>
+                                            <th>الحالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactions">
+                                        <tr>
+                                            <td colspan="5" class="text-center">جاري التحميل...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="stat-card">
+                            <h5 class="mb-3">توزيع الأرصدة</h5>
+                            <canvas id="balanceChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Safes Page -->
+            <div class="page-content" id="safes-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>الخزائن المتدرجة</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addSafe()">
+                        <i class="fas fa-plus"></i> إضافة خزينة
+                    </button>
+                </div>
+                
+                <div id="safesTree" class="tree-container">
+                    <!-- Tree items will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Customers Page -->
+            <div class="page-content" id="customers-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>العملاء</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addCustomer()">
+                        <i class="fas fa-plus"></i> إضافة عميل
+                    </button>
+                </div>
+                
+                <div id="customersTree" class="tree-container">
+                    <!-- Tree items will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Suppliers Page -->
+            <div class="page-content" id="suppliers-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>الموردين</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addSupplier()">
+                        <i class="fas fa-plus"></i> إضافة مورد
+                    </button>
+                </div>
+                
+                <div id="suppliersTree" class="tree-container">
+                    <!-- Tree items will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Vouchers Page -->
+            <div class="page-content" id="vouchers-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>السندات</h2>
+                    <button class="btn btn-modern btn-primary-gradient" onclick="addVoucher()">
+                        <i class="fas fa-plus"></i> إضافة سند
+                    </button>
+                </div>
+                
+                <div class="modern-table">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>رقم السند</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>التاريخ</th>
+                                    <th>الوصف</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vouchersTable">
+                                <!-- Vouchers will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reports Page -->
+            <div class="page-content" id="reports-page">
+                <h2 class="mb-4">التقارير</h2>
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                            <h5>تقرير الخزائن</h5>
+                            <button class="btn btn-modern btn-primary-gradient mt-3">
+                                تصدير PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
+                            <h5>كشف الحساب</h5>
+                            <button class="btn btn-modern btn-success-gradient mt-3">
+                                تصدير Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="stat-card text-center">
+                            <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                            <h5>الأرباح والخسائر</h5>
+                            <button class="btn btn-modern btn-primary-gradient mt-3">
+                                عرض التقرير
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Page -->
+            <div class="page-content" id="settings-page">
+                <h2 class="mb-4">الإعدادات</h2>
+                
+                <div class="stat-card">
+                    <form>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">اسم الشركة</label>
+                                <input type="text" class="form-control" value="نظام الخزينة الذكي">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">العملة</label>
+                                <select class="form-select">
+                                    <option>جنيه مصري (EGP)</option>
+                                    <option>دولار أمريكي (USD)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-modern btn-primary-gradient">
+                                    <i class="fas fa-save"></i> حفظ الإعدادات
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Global Variables
+        let currentPage = 'dashboard';
+        let safesData = [];
+        let customersData = [];
+        let suppliersData = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+            loadDashboard();
+        });
+        
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Menu Toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Menu Links
+            document.querySelectorAll('.menu-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    navigateToPage(page);
+                });
+            });
+        }
+        
+        // Initialize App
+        function initializeApp() {
+            // Set active menu
+            updateActiveMenu('dashboard');
+        }
+        
+        // Toggle Sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainWrapper = document.getElementById('mainWrapper');
+            
+            sidebar.classList.toggle('collapsed');
+            mainWrapper.classList.toggle('expanded');
+        }
+        
+        // Navigate to Page
+        function navigateToPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected page
+            const pageElement = document.getElementById(`${page}-page`);
+            if (pageElement) {
+                pageElement.classList.add('active');
+            }
+            
+            // Update active menu
+            updateActiveMenu(page);
+            
+            // Update page title
+            updatePageTitle(page);
+            
+            // Load page data
+            loadPageData(page);
+            
+            currentPage = page;
+        }
+        
+        // Update Active Menu
+        function updateActiveMenu(page) {
+            document.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.page === page) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Update Page Title
+        function updatePageTitle(page) {
+            const titles = {
+                'dashboard': 'لوحة التحكم',
+                'safes': 'الخزائن المتدرجة',
+                'customers': 'العملاء',
+                'suppliers': 'الموردين',
+                'vouchers': 'السندات',
+                'reports': 'التقارير',
+                'settings': 'الإعدادات'
+            };
+            
+            document.getElementById('pageTitle').textContent = titles[page] || 'نظام الخزينة';
+        }
+        
+        // Load Page Data
+        function loadPageData(page) {
+            showLoading();
+            
+            switch(page) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'safes':
+                    loadSafes();
+                    break;
+                case 'customers':
+                    loadCustomers();
+                    break;
+                case 'suppliers':
+                    loadSuppliers();
+                    break;
+                case 'vouchers':
+                    loadVouchers();
+                    break;
+            }
+            
+            setTimeout(hideLoading, 500);
+        }
+        
+        // Load Dashboard
+        async function loadDashboard() {
+            try {
+                // Load statistics
+                const [safesRes, customersRes, suppliersRes] = await Promise.all([
+                    fetch('/api/safes/tree'),
+                    fetch('/api/customers/tree'),
+                    fetch('/api/suppliers/tree')
+                ]);
+                
+                const safes = await safesRes.json();
+                const customers = await customersRes.json();
+                const suppliers = await suppliersRes.json();
+                
+                // Update stats
+                document.getElementById('totalBalance').textContent = formatNumber(calculateTotal(safes));
+                document.getElementById('totalCustomers').textContent = countItems(customers);
+                document.getElementById('totalSuppliers').textContent = countItems(suppliers);
+                document.getElementById('totalVouchers').textContent = Math.floor(Math.random() * 100);
+                
+                // Load recent transactions
+                loadRecentTransactions();
+                
+                // Draw chart
+                drawBalanceChart();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        // Load Safes
+        async function loadSafes() {
+            try {
+                const response = await fetch('/api/safes/tree');
+                safesData = await response.json();
+                renderSafesTree();
+            } catch (error) {
+                console.error('Error loading safes:', error);
+            }
+        }
+        
+        // Load Customers
+        async function loadCustomers() {
+            try {
+                const response = await fetch('/api/customers/tree');
+                customersData = await response.json();
+                renderCustomersTree();
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+        
+        // Load Suppliers
+        async function loadSuppliers() {
+            try {
+                const response = await fetch('/api/suppliers/tree');
+                suppliersData = await response.json();
+                renderSuppliersTree();
+            } catch (error) {
+                console.error('Error loading suppliers:', error);
+            }
+        }
+        
+        // Load Vouchers
+        async function loadVouchers() {
+            try {
+                const response = await fetch('/api/vouchers?limit=20');
+                const vouchers = await response.json();
+                renderVouchersTable(vouchers);
+            } catch (error) {
+                console.error('Error loading vouchers:', error);
+            }
+        }
+        
+        // Render Safes Tree
+        function renderSafesTree() {
+            const container = document.getElementById('safesTree');
+            container.innerHTML = '';
+            
+            if (safesData.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">لا توجد خزائن</div>';
+                return;
+            }
+            
+            safesData.forEach(safe => {
+                container.appendChild(createTreeItem(safe, 'safe'));
+            });
+        }
+        
+        // Render Customers Tree
+        function renderCustomersTree() {
+            const container = document.getElementById('customersTree');
+            container.innerHTML = '';
+            
+            if (customersData.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">لا يوجد عملاء</div>';
+                return;
+            }
+            
+            customersData.forEach(customer => {
+                container.appendChild(createTreeItem(customer, 'customer'));
+            });
+        }
+        
+        // Render Suppliers Tree
+        function renderSuppliersTree() {
+            const container = document.getElementById('suppliersTree');
+            container.innerHTML = '';
+            
+            if (suppliersData.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">لا يوجد موردين</div>';
+                return;
+            }
+            
+            suppliersData.forEach(supplier => {
+                container.appendChild(createTreeItem(supplier, 'supplier'));
+            });
+        }
+        
+        // Create Tree Item
+        function createTreeItem(item, type) {
+            const div = document.createElement('div');
+            div.className = 'tree-item';
+            
+            if (item.is_container || item.is_group) {
+                div.classList.add('parent');
+            }
+            
+            const icon = type === 'safe' ? 'fa-vault' : 
+                        type === 'customer' ? 'fa-user' : 'fa-truck';
+            
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas ${icon} me-2 text-primary"></i>
+                        <strong>${item.name}</strong>
+                        ${item.is_container || item.is_group ? 
+                            '<span class="badge bg-warning ms-2">مجموعة</span>' : ''}
+                    </div>
+                    <div>
+                        <span class="badge bg-${item.balance >= 0 ? 'success' : 'danger'}">
+                            ${formatMoney(item.balance || 0)}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            // Add children
+            const children = item.children || item.branches;
+            if (children && children.length > 0) {
+                const childrenDiv = document.createElement('div');
+                childrenDiv.className = 'tree-children';
+                
+                children.forEach(child => {
+                    childrenDiv.appendChild(createTreeItem(child, type));
+                });
+                
+                div.appendChild(childrenDiv);
+            }
+            
+            return div;
+        }
+        
+        // Render Vouchers Table
+        function renderVouchersTable(vouchers) {
+            const tbody = document.getElementById('vouchersTable');
+            tbody.innerHTML = '';
+            
+            if (vouchers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">لا توجد سندات</td></tr>';
+                return;
+            }
+            
+            vouchers.forEach(voucher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${voucher.voucher_number}</td>
+                    <td>
+                        <span class="badge bg-${voucher.voucher_type === 'receipt' ? 'success' : 'danger'}">
+                            ${voucher.voucher_type === 'receipt' ? 'قبض' : 'صرف'}
+                        </span>
+                    </td>
+                    <td>${formatMoney(voucher.amount)}</td>
+                    <td>${new Date(voucher.date).toLocaleDateString('ar-EG')}</td>
+                    <td>${voucher.description || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Load Recent Transactions
+        async function loadRecentTransactions() {
+            try {
+                const response = await fetch('/api/vouchers?limit=5');
+                const vouchers = await response.json();
+                
+                const tbody = document.getElementById('recentTransactions');
+                tbody.innerHTML = '';
+                
+                vouchers.forEach(v => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${v.voucher_number}</td>
+                        <td>
+                            <span class="badge bg-${v.voucher_type === 'receipt' ? 'success' : 'danger'}">
+                                ${v.voucher_type === 'receipt' ? 'قبض' : 'صرف'}
+                            </span>
+                        </td>
+                        <td>${formatMoney(v.amount)}</td>
+                        <td>${new Date(v.date).toLocaleDateString('ar-EG')}</td>
+                        <td><span class="badge bg-success">مكتمل</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+        
+        // Draw Balance Chart
+        function drawBalanceChart() {
+            const ctx = document.getElementById('balanceChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['الخزائن', 'العملاء', 'الموردين'],
+                    datasets: [{
+                        data: [45, 30, 25],
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Helper Functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+        
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP'
+            }).format(amount || 0);
+        }
+        
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ar-EG').format(num || 0);
+        }
+        
+        function countItems(items) {
+            let count = 0;
+            function countRecursive(arr) {
+                arr.forEach(item => {
+                    count++;
+                    if (item.children || item.branches) {
+                        countRecursive(item.children || item.branches);
+                    }
+                });
+            }
+            countRecursive(items);
+            return count;
+        }
+        
+        function calculateTotal(items) {
+            let total = 0;
+            items.forEach(item => {
+                total += Math.abs(item.balance || 0);
+            });
+            return total;
+        }
+        
+        // Action Functions
+        function addSafe() {
+            alert('سيتم فتح نافذة إضافة خزينة');
+        }
+        
+        function addCustomer() {
+            alert('سيتم فتح نافذة إضافة عميل');
+        }
+        
+        function addSupplier() {
+            alert('سيتم فتح نافذة إضافة مورد');
+        }
+        
+        function addVoucher() {
+            alert('سيتم فتح نافذة إضافة سند');
+        }
+    </script>
+</body>
+</html>

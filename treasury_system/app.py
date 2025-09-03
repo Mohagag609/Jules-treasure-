@@ -23,10 +23,10 @@ except Exception as e:
     print(f"Warning: Database initialization error: {e}")
     # Continue anyway, database might already be initialized
 
-# الصفحة الرئيسية - النظام الجديد
+# الصفحة الرئيسية - النظام المودرن
 @app.route('/')
 def index():
-    return render_template('dashboard.html')
+    return render_template('modern_dashboard.html')
 
 # صفحة الخزائن المتدرجة
 @app.route('/safes-tree')
