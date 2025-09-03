@@ -788,16 +788,640 @@ function drawBalanceChart() {
     });
 }
 
+// Add New Items Functions
+function addSafe() {
+    editingId = null;
+    document.getElementById('safeModalTitle').textContent = 'إضافة خزينة جديدة';
+    document.getElementById('safeForm').reset();
+    loadParentSafes();
+    const modal = new bootstrap.Modal(document.getElementById('safeModal'));
+    modal.show();
+}
+
+function addCustomer() {
+    editingId = null;
+    document.getElementById('customerModalTitle').textContent = 'إضافة عميل جديد';
+    document.getElementById('customerForm').reset();
+    loadParentCustomers();
+    const modal = new bootstrap.Modal(document.getElementById('customerModal'));
+    modal.show();
+}
+
+function addSupplier() {
+    editingId = null;
+    document.getElementById('supplierModalTitle').textContent = 'إضافة مورد جديد';
+    document.getElementById('supplierForm').reset();
+    loadParentSuppliers();
+    const modal = new bootstrap.Modal(document.getElementById('supplierModal'));
+    modal.show();
+}
+
+function addVoucher() {
+    editingId = null;
+    document.getElementById('voucherModalTitle').textContent = 'إضافة سند جديد';
+    document.getElementById('voucherForm').reset();
+    loadVoucherFormData();
+    const modal = new bootstrap.Modal(document.getElementById('voucherModal'));
+    modal.show();
+}
+
+// Save Functions
+async function saveSafe() {
+    const name = document.getElementById('safeName').value;
+    const parentId = document.getElementById('parentSafe').value;
+    const isContainer = document.getElementById('isContainer').checked;
+    
+    if (!name) {
+        showAlert('يرجى إدخال اسم الخزينة', 'warning');
+        return;
+    }
+    
+    const data = {
+        name: name,
+        parent_safe_id: parentId ? parseInt(parentId) : null,
+        is_container: isContainer,
+        type: parentId ? 'sub-branch' : 'main'
+    };
+    
+    try {
+        const url = editingId ? `/api/safes/${editingId}` : '/api/safes';
+        const method = editingId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('safeModal')).hide();
+            showAlert(editingId ? 'تم تحديث الخزينة بنجاح' : 'تم إضافة الخزينة بنجاح', 'success');
+            dataCache.safes.timestamp = 0;
+            await loadSafes();
+        } else {
+            showAlert('خطأ في حفظ البيانات', 'danger');
+        }
+    } catch (error) {
+        showAlert('خطأ في الاتصال', 'danger');
+    }
+}
+
+async function saveCustomer() {
+    const name = document.getElementById('customerName').value;
+    const phone = document.getElementById('customerPhone').value;
+    const address = document.getElementById('customerAddress').value;
+    const parentId = document.getElementById('parentCustomer').value;
+    const isGroup = document.getElementById('isCustomerGroup').checked;
+    
+    if (!name) {
+        showAlert('يرجى إدخال اسم العميل', 'warning');
+        return;
+    }
+    
+    const data = {
+        name: name,
+        phone: phone,
+        address: address,
+        parent_customer_id: parentId ? parseInt(parentId) : null,
+        is_group: isGroup
+    };
+    
+    try {
+        const url = editingId ? `/api/customers/${editingId}` : '/api/customers';
+        const method = editingId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('customerModal')).hide();
+            showAlert(editingId ? 'تم تحديث العميل بنجاح' : 'تم إضافة العميل بنجاح', 'success');
+            dataCache.customers.timestamp = 0;
+            await loadCustomers();
+        } else {
+            showAlert('خطأ في حفظ البيانات', 'danger');
+        }
+    } catch (error) {
+        showAlert('خطأ في الاتصال', 'danger');
+    }
+}
+
+async function saveSupplier() {
+    const name = document.getElementById('supplierName').value;
+    const phone = document.getElementById('supplierPhone').value;
+    const address = document.getElementById('supplierAddress').value;
+    const parentId = document.getElementById('parentSupplier').value;
+    const isGroup = document.getElementById('isSupplierGroup').checked;
+    
+    if (!name) {
+        showAlert('يرجى إدخال اسم المورد', 'warning');
+        return;
+    }
+    
+    const data = {
+        name: name,
+        phone: phone,
+        address: address,
+        parent_supplier_id: parentId ? parseInt(parentId) : null,
+        is_group: isGroup
+    };
+    
+    try {
+        const url = editingId ? `/api/suppliers/${editingId}` : '/api/suppliers';
+        const method = editingId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('supplierModal')).hide();
+            showAlert(editingId ? 'تم تحديث المورد بنجاح' : 'تم إضافة المورد بنجاح', 'success');
+            dataCache.suppliers.timestamp = 0;
+            await loadSuppliers();
+        } else {
+            showAlert('خطأ في حفظ البيانات', 'danger');
+        }
+    } catch (error) {
+        showAlert('خطأ في الاتصال', 'danger');
+    }
+}
+
+async function saveVoucher() {
+    const type = document.getElementById('voucherType').value;
+    const amount = document.getElementById('voucherAmount').value;
+    const safeId = document.getElementById('voucherSafe').value;
+    const entityId = document.getElementById('voucherEntity').value;
+    const description = document.getElementById('voucherDescription').value;
+    
+    if (!amount || !safeId) {
+        showAlert('يرجى ملء جميع الحقول المطلوبة', 'warning');
+        return;
+    }
+    
+    const data = {
+        voucher_type: type,
+        amount: parseFloat(amount),
+        description: description,
+        date: new Date().toISOString().split('T')[0]
+    };
+    
+    if (type === 'receipt') {
+        data.customer_id = entityId ? parseInt(entityId) : null;
+        data.safe_to_id = parseInt(safeId);
+    } else if (type === 'payment') {
+        data.supplier_id = entityId ? parseInt(entityId) : null;
+        data.safe_from_id = parseInt(safeId);
+    } else if (type === 'transfer') {
+        data.safe_from_id = parseInt(safeId);
+        // For transfer, we need a second safe selector
+    }
+    
+    try {
+        const url = editingId ? `/api/vouchers/${editingId}` : '/api/vouchers';
+        const method = editingId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('voucherModal')).hide();
+            showAlert(editingId ? 'تم تحديث السند بنجاح' : 'تم إضافة السند بنجاح', 'success');
+            dataCache.vouchers.timestamp = 0;
+            await loadVouchers(true);
+            
+            // Refresh dashboard if on dashboard page
+            if (currentPage === 'dashboard') {
+                await loadDashboard();
+            }
+        } else {
+            const error = await response.json();
+            showAlert(error.error || 'خطأ في حفظ السند', 'danger');
+        }
+    } catch (error) {
+        showAlert('خطأ في الاتصال', 'danger');
+    }
+}
+
+// Load Form Data Functions
+async function loadParentSafes() {
+    if (!isCacheValid('safes')) {
+        await loadSafes();
+    }
+    
+    const select = document.getElementById('parentSafe');
+    if (!select) return;
+    
+    const safes = dataCache.safes.data || [];
+    select.innerHTML = '<option value="">-- خزينة رئيسية --</option>';
+    
+    safes.forEach(safe => {
+        if (safe.is_container && safe.id !== editingId) {
+            addSafeOption(select, safe, 0);
+        }
+    });
+}
+
+function addSafeOption(select, safe, level) {
+    const option = document.createElement('option');
+    option.value = safe.id;
+    option.textContent = '  '.repeat(level) + safe.name;
+    select.appendChild(option);
+    
+    if (safe.children) {
+        safe.children.forEach(child => {
+            if (child.is_container) {
+                addSafeOption(select, child, level + 1);
+            }
+        });
+    }
+}
+
+async function loadParentCustomers() {
+    if (!isCacheValid('customers')) {
+        await loadCustomers();
+    }
+    
+    const select = document.getElementById('parentCustomer');
+    if (!select) return;
+    
+    const customers = dataCache.customers.data || [];
+    select.innerHTML = '<option value="">-- عميل رئيسي --</option>';
+    
+    customers.forEach(customer => {
+        if (customer.is_group && customer.id !== editingId) {
+            const option = document.createElement('option');
+            option.value = customer.id;
+            option.textContent = customer.name;
+            select.appendChild(option);
+        }
+    });
+}
+
+async function loadParentSuppliers() {
+    if (!isCacheValid('suppliers')) {
+        await loadSuppliers();
+    }
+    
+    const select = document.getElementById('parentSupplier');
+    if (!select) return;
+    
+    const suppliers = dataCache.suppliers.data || [];
+    select.innerHTML = '<option value="">-- مورد رئيسي --</option>';
+    
+    suppliers.forEach(supplier => {
+        if (supplier.is_group && supplier.id !== editingId) {
+            const option = document.createElement('option');
+            option.value = supplier.id;
+            option.textContent = supplier.name;
+            select.appendChild(option);
+        }
+    });
+}
+
+async function loadVoucherFormData() {
+    // Load safes
+    if (!isCacheValid('safes')) {
+        await loadSafes();
+    }
+    
+    const safeSelect = document.getElementById('voucherSafe');
+    if (safeSelect) {
+        const safes = dataCache.safes.data || [];
+        safeSelect.innerHTML = '<option value="">اختر الخزينة</option>';
+        
+        function addSafesToSelect(safesArray, level = 0) {
+            safesArray.forEach(safe => {
+                if (!safe.is_container) {
+                    const option = document.createElement('option');
+                    option.value = safe.id;
+                    option.textContent = '  '.repeat(level) + safe.name;
+                    safeSelect.appendChild(option);
+                }
+                if (safe.children) {
+                    addSafesToSelect(safe.children, level + 1);
+                }
+            });
+        }
+        
+        addSafesToSelect(safes);
+    }
+    
+    // Load customers/suppliers based on type
+    updateVoucherForm();
+}
+
+async function updateVoucherForm() {
+    const type = document.getElementById('voucherType')?.value;
+    const entitySection = document.getElementById('entitySection');
+    const entityLabel = document.getElementById('entityLabel');
+    const entitySelect = document.getElementById('voucherEntity');
+    
+    if (!entitySelect) return;
+    
+    entitySelect.innerHTML = '<option value="">اختر</option>';
+    
+    if (type === 'receipt') {
+        if (entityLabel) entityLabel.textContent = 'العميل';
+        
+        if (!isCacheValid('customers')) {
+            await loadCustomers();
+        }
+        
+        const customers = dataCache.customers.data || [];
+        
+        function addCustomersToSelect(customersArray, level = 0) {
+            customersArray.forEach(customer => {
+                if (!customer.is_group) {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = '  '.repeat(level) + customer.name;
+                    entitySelect.appendChild(option);
+                }
+                if (customer.branches) {
+                    addCustomersToSelect(customer.branches, level + 1);
+                }
+            });
+        }
+        
+        addCustomersToSelect(customers);
+        if (entitySection) entitySection.style.display = 'block';
+        
+    } else if (type === 'payment') {
+        if (entityLabel) entityLabel.textContent = 'المورد';
+        
+        if (!isCacheValid('suppliers')) {
+            await loadSuppliers();
+        }
+        
+        const suppliers = dataCache.suppliers.data || [];
+        
+        function addSuppliersToSelect(suppliersArray, level = 0) {
+            suppliersArray.forEach(supplier => {
+                if (!supplier.is_group) {
+                    const option = document.createElement('option');
+                    option.value = supplier.id;
+                    option.textContent = '  '.repeat(level) + supplier.name;
+                    entitySelect.appendChild(option);
+                }
+                if (supplier.branches) {
+                    addSuppliersToSelect(supplier.branches, level + 1);
+                }
+            });
+        }
+        
+        addSuppliersToSelect(suppliers);
+        if (entitySection) entitySection.style.display = 'block';
+        
+    } else {
+        if (entitySection) entitySection.style.display = 'none';
+    }
+}
+
+// View/Edit Voucher Functions
+async function viewVoucher(id) {
+    try {
+        const response = await fetch(`/api/vouchers/${id}`);
+        const voucher = await response.json();
+        
+        showModal('تفاصيل السند', `
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>رقم السند:</strong> ${voucher.voucher_number}</p>
+                    <p><strong>النوع:</strong> ${getVoucherTypeText(voucher.voucher_type)}</p>
+                    <p><strong>المبلغ:</strong> ${formatMoney(voucher.amount)}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>التاريخ:</strong> ${new Date(voucher.date).toLocaleDateString('ar-EG')}</p>
+                    <p><strong>الوصف:</strong> ${voucher.description || '-'}</p>
+                    <p><strong>الطرف:</strong> ${getVoucherEntity(voucher)}</p>
+                </div>
+            </div>
+        `);
+    } catch (error) {
+        showAlert('خطأ في تحميل البيانات', 'danger');
+    }
+}
+
+async function editVoucher(id) {
+    try {
+        const response = await fetch(`/api/vouchers/${id}`);
+        const voucher = await response.json();
+        
+        editingId = id;
+        document.getElementById('voucherModalTitle').textContent = 'تعديل سند';
+        document.getElementById('voucherType').value = voucher.voucher_type;
+        document.getElementById('voucherAmount').value = voucher.amount;
+        document.getElementById('voucherDescription').value = voucher.description || '';
+        
+        await loadVoucherFormData();
+        
+        // Set the safe and entity after loading
+        setTimeout(() => {
+            if (voucher.safe_from_id) {
+                document.getElementById('voucherSafe').value = voucher.safe_from_id;
+            } else if (voucher.safe_to_id) {
+                document.getElementById('voucherSafe').value = voucher.safe_to_id;
+            }
+            
+            if (voucher.customer_id) {
+                document.getElementById('voucherEntity').value = voucher.customer_id;
+            } else if (voucher.supplier_id) {
+                document.getElementById('voucherEntity').value = voucher.supplier_id;
+            }
+        }, 500);
+        
+        const modal = new bootstrap.Modal(document.getElementById('voucherModal'));
+        modal.show();
+    } catch (error) {
+        showAlert('خطأ في تحميل البيانات', 'danger');
+    }
+}
+
+async function viewSupplier(id) {
+    try {
+        const response = await fetch(`/api/suppliers/${id}`);
+        const supplier = await response.json();
+        
+        showModal('تفاصيل المورد', `
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>الاسم:</strong> ${supplier.name}</p>
+                    <p><strong>الهاتف:</strong> ${supplier.phone || '-'}</p>
+                    <p><strong>العنوان:</strong> ${supplier.address || '-'}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>الرصيد:</strong> ${formatMoney(supplier.balance)}</p>
+                    <p><strong>النوع:</strong> ${supplier.is_group ? 'مجموعة' : 'فردي'}</p>
+                </div>
+            </div>
+        `);
+    } catch (error) {
+        showAlert('خطأ في تحميل البيانات', 'danger');
+    }
+}
+
+async function editSupplier(id) {
+    try {
+        const response = await fetch(`/api/suppliers/${id}`);
+        const supplier = await response.json();
+        
+        editingId = id;
+        document.getElementById('supplierModalTitle').textContent = 'تعديل مورد';
+        document.getElementById('supplierName').value = supplier.name;
+        document.getElementById('supplierPhone').value = supplier.phone || '';
+        document.getElementById('supplierAddress').value = supplier.address || '';
+        document.getElementById('parentSupplier').value = supplier.parent_supplier_id || '';
+        document.getElementById('isSupplierGroup').checked = supplier.is_group;
+        
+        await loadParentSuppliers();
+        const modal = new bootstrap.Modal(document.getElementById('supplierModal'));
+        modal.show();
+    } catch (error) {
+        showAlert('خطأ في تحميل البيانات', 'danger');
+    }
+}
+
+function printSafe(id) {
+    const safes = dataCache.safes.data || [];
+    const safe = findItemById(safes, id);
+    if (!safe) return;
+    
+    printItem('خزينة', safe);
+}
+
+function printCustomer(id) {
+    const customers = dataCache.customers.data || [];
+    const customer = findItemById(customers, id);
+    if (!customer) return;
+    
+    printItem('عميل', customer);
+}
+
+function printSupplier(id) {
+    const suppliers = dataCache.suppliers.data || [];
+    const supplier = findItemById(suppliers, id);
+    if (!supplier) return;
+    
+    printItem('مورد', supplier);
+}
+
+function printVoucher(id) {
+    const vouchers = dataCache.vouchers.data || [];
+    const voucher = vouchers.find(v => v.id === id);
+    if (!voucher) return;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html dir="rtl">
+        <head>
+            <title>سند ${getVoucherTypeText(voucher.voucher_type)} - ${voucher.voucher_number}</title>
+            <style>
+                body { font-family: Arial; padding: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                h1 { color: #333; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: right; }
+                th { background: #f4f4f4; }
+                .signature { margin-top: 50px; display: flex; justify-content: space-between; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>سند ${getVoucherTypeText(voucher.voucher_type)}</h1>
+                <p>رقم السند: ${voucher.voucher_number}</p>
+            </div>
+            <table>
+                <tr><th>التاريخ</th><td>${new Date(voucher.date).toLocaleDateString('ar-EG')}</td></tr>
+                <tr><th>المبلغ</th><td>${formatMoney(voucher.amount)}</td></tr>
+                <tr><th>البيان</th><td>${voucher.description || '-'}</td></tr>
+                <tr><th>الطرف</th><td>${getVoucherEntity(voucher)}</td></tr>
+            </table>
+            <div class="signature">
+                <div>التوقيع: ________</div>
+                <div>المستلم: ________</div>
+            </div>
+            <script>window.print();</script>
+        </body>
+        </html>
+    `);
+}
+
+function printItem(type, item) {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html dir="rtl">
+        <head>
+            <title>بيانات ${type} - ${item.name}</title>
+            <style>
+                body { font-family: Arial; padding: 20px; }
+                h1 { color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                th { background: #f4f4f4; }
+            </style>
+        </head>
+        <body>
+            <h1>بيانات ${type}</h1>
+            <table>
+                <tr><th>الاسم</th><td>${item.name}</td></tr>
+                ${item.phone ? `<tr><th>الهاتف</th><td>${item.phone}</td></tr>` : ''}
+                ${item.address ? `<tr><th>العنوان</th><td>${item.address}</td></tr>` : ''}
+                <tr><th>الرصيد</th><td>${formatMoney(item.balance || 0)}</td></tr>
+                <tr><th>التاريخ</th><td>${new Date().toLocaleDateString('ar-EG')}</td></tr>
+            </table>
+            <script>window.print();</script>
+        </body>
+        </html>
+    `);
+}
+
+function findItemById(items, id) {
+    for (let item of items) {
+        if (item.id === id) return item;
+        const children = item.children || item.branches;
+        if (children) {
+            const found = findItemById(children, id);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
 // Export functions
+window.addSafe = addSafe;
 window.viewSafe = viewSafe;
 window.editSafe = editSafe;
 window.deleteSafe = deleteSafe;
+window.printSafe = printSafe;
+window.saveSafe = saveSafe;
+
+window.addCustomer = addCustomer;
 window.viewCustomer = viewCustomer;
 window.editCustomer = editCustomer;
 window.deleteCustomer = deleteCustomer;
+window.printCustomer = printCustomer;
+window.saveCustomer = saveCustomer;
+
+window.addSupplier = addSupplier;
 window.viewSupplier = viewSupplier;
 window.editSupplier = editSupplier;
 window.deleteSupplier = deleteSupplier;
+window.printSupplier = printSupplier;
+window.saveSupplier = saveSupplier;
+
+window.addVoucher = addVoucher;
 window.viewVoucher = viewVoucher;
 window.editVoucher = editVoucher;
 window.deleteVoucher = deleteVoucher;
+window.printVoucher = printVoucher;
+window.saveVoucher = saveVoucher;
+window.updateVoucherForm = updateVoucherForm;
