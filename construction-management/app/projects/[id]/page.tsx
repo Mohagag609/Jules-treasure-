@@ -257,10 +257,14 @@ export default function ProjectDetailsPage() {
               ) : (
                 <div className="space-y-3">
                   {project.phases.map((phase) => (
-                    <div key={phase.id} className="border rounded-lg p-4">
+                    <div key={phase.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-medium text-gray-900">{phase.name}</h4>
+                          <Link href={`/projects/${project.id}/phases/${phase.id}`}>
+                            <h4 className="font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                              {phase.name}
+                            </h4>
+                          </Link>
                           <p className="text-sm text-gray-600 mt-1">
                             المطلوب: {formatCurrency(phase.amount_required)} | 
                             المدفوع: {formatCurrency(phase.amount_paid)}
@@ -282,6 +286,18 @@ export default function ProjectDetailsPage() {
                             style={{ width: `${(phase.amount_paid / phase.amount_required) * 100}%` }}
                           ></div>
                         </div>
+                      </div>
+                      <div className="mt-3 flex justify-between">
+                        <Link href={`/projects/${project.id}/phases/${phase.id}`}>
+                          <button className="text-sm text-blue-600 hover:underline">
+                            عرض التفاصيل ←
+                          </button>
+                        </Link>
+                        {phase.suppliers && phase.suppliers.length > 0 && (
+                          <span className="text-xs text-gray-500">
+                            {phase.suppliers.length} موردين
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
