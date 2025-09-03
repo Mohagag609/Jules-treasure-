@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/database';
+import db from '@/lib/db/postgres';
 
 // GET - جلب جميع الشركاء
 export async function GET() {
   try {
-    const partners = db.prepare(`
+    const partners = await db.getMany(`
       SELECT * FROM partners 
       ORDER BY name
-    `).all();
+    `);
     
     return NextResponse.json(partners);
   } catch (error) {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
     
     // التحقق من عدم وجود شريك بنفس الاسم
-    const existingPartner = db.prepare('SELECT id FROM partners WHERE name = ?').get(name);
+    const existingPartner = await db.getOne('SELECT id FROM partners WHERE name = $1', [name]);
     if (existingPartner) {
       return NextResponse.json(
         { error: 'Partner with this name already exists' },
@@ -41,12 +41,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const result = db.prepare(`
+    const newPartner = await db.insert(`
       INSERT INTO partners (name, phone, email)
-      VALUES (?, ?, ?)
-    `).run(name, phone || null, email || null);
-    
-    const newPartner = db.prepare('SELECT * FROM partners WHERE id = ?').get(result.lastInsertRowid);
+      VALUES ($1, $2, $3)
+    `, [name, phone || null, email || null]);
     
     return NextResponse.json(newPartner, { status: 201 });
   } catch (error) {

@@ -18,7 +18,7 @@
 
 - **Next.js 15** - إطار العمل الرئيسي
 - **TypeScript** - للكتابة الآمنة
-- **SQLite** - قاعدة البيانات
+- **PostgreSQL** - قاعدة البيانات (Neon)
 - **Tailwind CSS** - للتصميم
 - **React Hot Toast** - للإشعارات
 
@@ -36,17 +36,22 @@ git clone [repository-url]
 cd construction-management
 ```
 
-2. تثبيت المكتبات:
+2. إعداد قاعدة البيانات:
+- أنشئ حساب على [Neon](https://neon.tech) أو استخدم أي قاعدة بيانات PostgreSQL
+- انسخ ملف `.env.example` إلى `.env`
+- أضف رابط قاعدة البيانات في ملف `.env`
+
+3. تثبيت المكتبات:
 ```bash
 npm install
 ```
 
-3. تشغيل المشروع في وضع التطوير:
+4. تشغيل المشروع في وضع التطوير:
 ```bash
 npm run dev
 ```
 
-4. فتح المتصفح على:
+5. فتح المتصفح على:
 ```
 http://localhost:3000
 ```
@@ -69,6 +74,7 @@ npm run start
    - Environment Variables:
      - `NODE_ENV`: production
      - `PORT`: 10000
+     - `DATABASE_URL`: رابط قاعدة البيانات PostgreSQL
 
 ## هيكل المشروع
 
@@ -89,7 +95,7 @@ construction-management/
 
 ## قاعدة البيانات
 
-النظام يستخدم SQLite مع الجداول التالية:
+النظام يستخدم PostgreSQL (Neon) مع الجداول التالية:
 - **projects** - المشاريع
 - **phases** - مراحل البناء
 - **partners** - الشركاء
@@ -101,10 +107,10 @@ construction-management/
 
 ## الأمان
 
-- جميع البيانات محفوظة محلياً
-- قاعدة البيانات SQLite مشفرة
+- قاعدة البيانات PostgreSQL محمية بـ SSL
 - التحقق من صحة المدخلات
 - حماية من SQL Injection
+- استخدام Prepared Statements
 
 ## الدعم
 
